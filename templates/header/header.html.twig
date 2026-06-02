@@ -7,7 +7,10 @@
         <nav class="header-nav">
             <a href="{{ path('app_home') }}">Accueil</a>
             <a href="#">Jeux</a>
-            {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_USER') %}
+            {% if is_granted('ROLE_ADMIN') %}
+                <a href="#">Dashboard</a>
+                <a href="{{ path('app_logout') }}">Se déconnecter</a>
+            {% elseif is_granted('ROLE_USER') %}
                 <a href="{{ path('app_logout') }}">Se déconnecter</a>
             {% else %}
                 <a href="{{ path('app_login') }}">Connexion</a>
