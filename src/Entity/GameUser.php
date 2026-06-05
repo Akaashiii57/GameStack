@@ -36,7 +36,6 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-
     public function getId(): ?int
     {
         return $this->id;
@@ -124,6 +123,4 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $data;
     }
-
-    
 }
