@@ -6,6 +6,7 @@ namespace DoctrineMigrations;
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use Doctrine\DBAL\Platforms\SQLitePlatform;
 
 /**
  * Auto-generated Migration: Please modify to your needs!
@@ -19,6 +20,10 @@ final class Version20260602120946 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        if ($this->connection->getDatabasePlatform() instanceof SQLitePlatform) {
+            return;
+        }
+
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('ALTER TABLE game_user ADD username VARCHAR(100) NOT NULL');
     }
