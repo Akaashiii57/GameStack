@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+    <section class="dashboard">
+        <div class="dashboard-hero">
+            <p class="dashboard-kicker">Espace admin</p>
+            <h1>Dashboard GameStack</h1>
+            <p>Vue rapide de l’activité de la plateforme sur une fenêtre de {{ activeWindowMinutes }} minutes.</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <article class="stat-card">
+                <span class="stat-label">Personnes en ligne</span>
+                <strong>{{ onlineUsers }}</strong>
+                <p>Utilisateurs actifs récemment.</p>
+            </article>
+
+            <article class="stat-card">
+                <span class="stat-label">Total inscrits</span>
+                <strong>{{ registeredUsers }}</strong>
+                <p>Comptage global des comptes créés.</p>
+            </article>
+        </div>
+
+        <div class="dashboard-notes">
+            <h2>Idées utiles ensuite</h2>
+            <ul>
+                <li>Afficher les 5 derniers inscrits.</li>
+                <li>Ajouter le nombre d’administrateurs actifs.</li>
+                <li>Montrer les jeux les plus consultés.</li>
+            </ul>
+        </div>
+    </section>
+{% endblock %}
