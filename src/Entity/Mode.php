@@ -21,7 +21,7 @@ class Mode
     /**
      * @var Collection<int, Game>
      */
-    #[ORM\OneToMany(targetEntity: Game::class, mappedBy: 'mode')]
+    #[ORM\OneToMany(targetEntity: Game::class, mappedBy: 'mode_id')]
     private Collection $games;
 
     public function __construct()

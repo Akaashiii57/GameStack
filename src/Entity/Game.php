@@ -31,7 +31,7 @@ class Game
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTime $release_date = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTime $estimated_playtime = null;
 
     #[ORM\ManyToOne(inversedBy: 'games')]
@@ -44,7 +44,7 @@ class Game
     /**
      * @var Collection<int, LibraryGame>
      */
-    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'game')]
+    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'game_id')]
     private Collection $libraryGames;
 
     public function __construct()
