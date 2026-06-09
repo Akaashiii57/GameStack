@@ -6,6 +6,7 @@ use App\Repository\GameUserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use DateTimeImmutable;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -50,7 +51,21 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     public function getId(): ?int
+    /**
+     * @var Collection<int, LibraryGame>
+     */
+    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'user_id')]
+    private Collection $libraryGames;
+
+    public function __construct()
     {
+        $this->libraryGames = new ArrayCollection();
+    }
+    #[ORM\Column(nullable: true)]
+    private ?DateTimeImmutable $lastActivityAt = null;
+    17bee41 (feat: Users total + en ligne)
+
+    public function getId(): ?int
         return $this->id;
     }
 
@@ -61,8 +76,9 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setEmail(string $email): static
     {
-        $this->email = $email;
 
+    #[ORM\Column(nullable: true)]
+    private ?DateTimeImmutable $lastActivityAt = null;
         return $this;
     }
 
@@ -122,6 +138,18 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    public function getLastActivityAt(): ?DateTimeImmutable
+    {
+        return $this->lastActivityAt;
+    }
+
+    public function setLastActivityAt(?DateTimeImmutable $lastActivityAt): static
+    {
+        $this->lastActivityAt = $lastActivityAt;
 
         return $this;
     }

@@ -21,7 +21,7 @@ class Status
     /**
      * @var Collection<int, LibraryGame>
      */
-    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'status')]
+    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'status_id')]
     private Collection $libraryGames;
 
     public function __construct()
