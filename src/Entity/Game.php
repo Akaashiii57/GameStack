@@ -31,12 +31,12 @@ class Game
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTime $release_date = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
-    private ?\DateTime $estimated_playtime = null;
+    #[ORM\Column(nullable: true)]
+    private ?int $estimated_playtime = null;
 
     #[ORM\ManyToOne(inversedBy: 'games')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?mode $mode = null;
+    private ?Mode $mode = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
@@ -117,24 +117,24 @@ class Game
         return $this;
     }
 
-    public function getEstimatedPlaytime(): ?\DateTime
+    public function getEstimatedPlaytime(): ?int
     {
         return $this->estimated_playtime;
     }
 
-    public function setEstimatedPlaytime(\DateTime $estimated_playtime): static
+    public function setEstimatedPlaytime(?int $estimated_playtime): static
     {
         $this->estimated_playtime = $estimated_playtime;
 
         return $this;
     }
 
-    public function getMode(): ?mode
+    public function getMode(): ?Mode
     {
         return $this->mode;
     }
 
-    public function setMode(?mode $mode): static
+    public function setMode(?Mode $mode): static
     {
         $this->mode = $mode;
 

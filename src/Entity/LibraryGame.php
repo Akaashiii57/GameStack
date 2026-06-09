@@ -20,11 +20,11 @@ class LibraryGame
 
     #[ORM\ManyToOne(inversedBy: 'libraryGames')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?game $game = null;
+    private ?Game $game = null;
 
     #[ORM\ManyToOne(inversedBy: 'libraryGames')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?status $status = null;
+    private ?Status $status = null;
 
     #[ORM\Column(type: Types::SMALLINT, nullable: true)]
     private ?int $personal_rating = null;
@@ -46,6 +46,12 @@ class LibraryGame
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $added_at = null;
+
+    public function __construct()
+    {
+        $this->is_favorite = false;
+        $this->added_at = new \DateTime();
+    }
 
     public function getId(): ?int
     {
@@ -69,7 +75,7 @@ class LibraryGame
         return $this->game;
     }
 
-    public function setGame(?game $game): static
+    public function setGame(?Game $game): static
     {
         $this->game = $game;
 
@@ -81,7 +87,7 @@ class LibraryGame
         return $this->status;
     }
 
-    public function setStatus(?status $status): static
+    public function setStatus(?Status $status): static
     {
         $this->status = $status;
 
