@@ -24,6 +24,8 @@ final class DashboardController extends AbstractController
         return $this->render('dashboard/index.html.twig', [
             'registeredUsers' => $this->gameUserRepository->countRegisteredUsers(),
             'onlineUsers' => $this->gameUserRepository->countOnlineUsers($since),
+            'activeAdministrators' => $this->gameUserRepository->countActiveAdministrators($since),
+            'latestRegisteredUsers' => $this->gameUserRepository->findLatestRegisteredUsers(),
             'activeWindowMinutes' => 15,
         ]);
     }

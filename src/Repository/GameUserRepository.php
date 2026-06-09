@@ -52,6 +52,31 @@ class GameUserRepository extends ServiceEntityRepository implements PasswordUpgr
             ->getSingleScalarResult();
     }
 
+    /**
+     * @return GameUser[]
+     */
+    public function findLatestRegisteredUsers(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('g')
+            ->orderBy('g.id', 'DESC')
+            ->addOrderBy('g.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countActiveAdministrators(DateTimeImmutable $since): int
+    {
+        return (int) $this->createQueryBuilder('g')
+            ->select('COUNT(g.id)')
+            ->andWhere('g.lastActivityAt >= :since')
+            ->andWhere('g.roles LIKE :adminRole')
+            ->setParameter('since', $since)
+            ->setParameter('adminRole', '%ROLE_ADMIN%')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     //    /**
     //     * @return GameUser[] Returns an array of GameUser objects
     //     */
