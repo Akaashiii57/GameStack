@@ -36,7 +36,7 @@ class Game
 
     #[ORM\ManyToOne(inversedBy: 'games')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?mode $mode_id = null;
+    private ?mode $mode = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
@@ -122,21 +122,21 @@ class Game
         return $this->estimated_playtime;
     }
 
-    public function setEstimatedPlaytime(?\DateTime $estimated_playtime): static
+    public function setEstimatedPlaytime(\DateTime $estimated_playtime): static
     {
         $this->estimated_playtime = $estimated_playtime;
 
         return $this;
     }
 
-    public function getModeId(): ?mode
+    public function getMode(): ?mode
     {
-        return $this->mode_id;
+        return $this->mode;
     }
 
-    public function setModeId(?mode $mode_id): static
+    public function setMode(?mode $mode): static
     {
-        $this->mode_id = $mode_id;
+        $this->mode = $mode;
 
         return $this;
     }
@@ -165,7 +165,7 @@ class Game
     {
         if (!$this->libraryGames->contains($libraryGame)) {
             $this->libraryGames->add($libraryGame);
-            $libraryGame->setGameId($this);
+            $libraryGame->setGame($this);
         }
 
         return $this;
@@ -175,8 +175,8 @@ class Game
     {
         if ($this->libraryGames->removeElement($libraryGame)) {
             // set the owning side to null (unless already changed)
-            if ($libraryGame->getGameId() === $this) {
-                $libraryGame->setGameId(null);
+            if ($libraryGame->getGame() === $this) {
+                $libraryGame->setGame(null);
             }
         }
 

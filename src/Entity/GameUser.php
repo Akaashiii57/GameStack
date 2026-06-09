@@ -179,7 +179,7 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if (!$this->libraryGames->contains($libraryGame)) {
             $this->libraryGames->add($libraryGame);
-            $libraryGame->setUserId($this);
+            $libraryGame->setUser($this);
         }
 
         return $this;

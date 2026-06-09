@@ -58,7 +58,7 @@ class Status
     {
         if (!$this->libraryGames->contains($libraryGame)) {
             $this->libraryGames->add($libraryGame);
-            $libraryGame->setStatusId($this);
+            $libraryGame->setStatus($this);
         }
 
         return $this;
@@ -68,8 +68,8 @@ class Status
     {
         if ($this->libraryGames->removeElement($libraryGame)) {
             // set the owning side to null (unless already changed)
-            if ($libraryGame->getStatusId() === $this) {
-                $libraryGame->setStatusId(null);
+            if ($libraryGame->getStatus() === $this) {
+                $libraryGame->setStatus(null);
             }
         }
 
