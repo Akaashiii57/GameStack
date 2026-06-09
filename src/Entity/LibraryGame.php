@@ -16,15 +16,15 @@ class LibraryGame
 
     #[ORM\ManyToOne(inversedBy: 'libraryGames')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?gameUser $user_id = null;
+    private ?GameUser $user = null;
 
     #[ORM\ManyToOne(inversedBy: 'libraryGames')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?game $game_id = null;
+    private ?game $game = null;
 
     #[ORM\ManyToOne(inversedBy: 'libraryGames')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?status $status_id = null;
+    private ?status $status = null;
 
     #[ORM\Column(type: Types::SMALLINT, nullable: true)]
     private ?int $personal_rating = null;
@@ -32,8 +32,11 @@ class LibraryGame
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $personal_review = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $playtime = null;
+
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
-    private ?\DateTime $sarted_at = null;
+    private ?\DateTime $started_at = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTime $finished_at = null;
@@ -49,38 +52,38 @@ class LibraryGame
         return $this->id;
     }
 
-    public function getUserId(): ?gameUser
+    public function getUser(): ?GameUser
     {
-        return $this->user_id;
+        return $this->user;
     }
 
-    public function setUserId(?gameUser $user_id): static
+    public function setUser(?GameUser $user): static
     {
-        $this->user_id = $user_id;
+        $this->user = $user;
 
         return $this;
     }
 
-    public function getGameId(): ?game
+    public function getGame(): ?game
     {
-        return $this->game_id;
+        return $this->game;
     }
 
-    public function setGameId(?game $game_id): static
+    public function setGame(?game $game): static
     {
-        $this->game_id = $game_id;
+        $this->game = $game;
 
         return $this;
     }
 
-    public function getStatusId(): ?status
+    public function getStatus(): ?status
     {
-        return $this->status_id;
+        return $this->status;
     }
 
-    public function setStatusId(?status $status_id): static
+    public function setStatus(?status $status): static
     {
-        $this->status_id = $status_id;
+        $this->status = $status;
 
         return $this;
     }
@@ -109,14 +112,26 @@ class LibraryGame
         return $this;
     }
 
-    public function getSartedAt(): ?\DateTime
+    public function getPlaytime(): ?int
     {
-        return $this->sarted_at;
+        return $this->playtime;
     }
 
-    public function setSartedAt(?\DateTime $sarted_at): static
+    public function setPlaytime(?int $playtime): static
     {
-        $this->sarted_at = $sarted_at;
+        $this->playtime = $playtime;
+
+        return $this;
+    }
+
+    public function getStartedAt(): ?\DateTime
+    {
+        return $this->started_at;
+    }
+
+    public function setStartedAt(?\DateTime $started_at): static
+    {
+        $this->started_at = $started_at;
 
         return $this;
     }

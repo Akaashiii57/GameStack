@@ -39,7 +39,18 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-<<<<<<< HEAD
+    /**
+     * @var Collection<int, LibraryGame>
+     */
+    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'user')]
+    private Collection $libraryGames;
+
+    public function __construct()
+    {
+        $this->libraryGames = new ArrayCollection();
+    }
+
+    public function getId(): ?int
     /**
      * @var Collection<int, LibraryGame>
      */
@@ -50,10 +61,9 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->libraryGames = new ArrayCollection();
     }
-=======
     #[ORM\Column(nullable: true)]
     private ?DateTimeImmutable $lastActivityAt = null;
->>>>>>> 17bee41 (feat: Users total + en ligne)
+    17bee41 (feat: Users total + en ligne)
 
     public function getId(): ?int
         return $this->id;
@@ -167,7 +177,7 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if (!$this->libraryGames->contains($libraryGame)) {
             $this->libraryGames->add($libraryGame);
-            $libraryGame->setUserId($this);
+            $libraryGame->setUser($this);
         }
 
         return $this;
@@ -177,8 +187,8 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->libraryGames->removeElement($libraryGame)) {
             // set the owning side to null (unless already changed)
-            if ($libraryGame->getUserId() === $this) {
-                $libraryGame->setUserId(null);
+            if ($libraryGame->getUser() === $this) {
+                $libraryGame->setUser(null);
             }
         }
 

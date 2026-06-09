@@ -58,7 +58,7 @@ class Mode
     {
         if (!$this->games->contains($game)) {
             $this->games->add($game);
-            $game->setModeId($this);
+            $game->setMode($this);
         }
 
         return $this;
@@ -68,8 +68,8 @@ class Mode
     {
         if ($this->games->removeElement($game)) {
             // set the owning side to null (unless already changed)
-            if ($game->getModeId() === $this) {
-                $game->setModeId(null);
+            if ($game->getMode() === $this) {
+                $game->setMode(null);
             }
         }
 
