@@ -11,6 +11,7 @@
 .env.test
 var/cache/
 vendor/
+var/log
 
 ###> phpunit/phpunit ###
 /phpunit.xml
