@@ -23,9 +23,7 @@ class PasswordResetType extends AbstractType
                     'class' => 'form-control'
                 ],
                 'constraints' => [
-                    new NotBlank([
-                        'message' => 'Veuillez saisir votre email',
-                    ]),
+                    new NotBlank(message: 'Veuillez saisir votre email'),
                 ],
             ])
             ->add('username', TextType::class, [
@@ -35,9 +33,7 @@ class PasswordResetType extends AbstractType
                     'class' => 'form-control'
                 ],
                 'constraints' => [
-                    new NotBlank([
-                        'message' => 'Veuillez saisir votre pseudo',
-                    ]),
+                    new NotBlank(message: 'Veuillez saisir votre pseudo'),
                 ],
             ])
             ->add('newPassword', PasswordType::class, [
@@ -47,14 +43,8 @@ class PasswordResetType extends AbstractType
                     'class' => 'form-control'
                 ],
                 'constraints' => [
-                    new NotBlank([
-                        'message' => 'Veuillez saisir un mot de passe',
-                    ]),
-                    new Length([
-                        'min' => 6,
-                        'minMessage' => 'Votre mot de passe doit contenir au moins {{ limit }} caractères',
-                        'max' => 4096,
-                    ]),
+                    new NotBlank(message: 'Veuillez saisir un mot de passe'),
+                    new Length(min: 6, minMessage: 'Votre mot de passe doit contenir au moins {{ limit }} caractères', max: 4096),
                 ],
             ]);
     }
