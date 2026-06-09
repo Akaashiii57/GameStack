@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\GameUserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -35,6 +37,17 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column]
     private ?string $password = null;
+
+    /**
+     * @var Collection<int, LibraryGame>
+     */
+    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'user')]
+    private Collection $libraryGames;
+
+    public function __construct()
+    {
+        $this->libraryGames = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -122,5 +135,35 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
         $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
 
         return $data;
+    }
+
+    /**
+     * @return Collection<int, LibraryGame>
+     */
+    public function getLibraryGames(): Collection
+    {
+        return $this->libraryGames;
+    }
+
+    public function addLibraryGame(LibraryGame $libraryGame): static
+    {
+        if (!$this->libraryGames->contains($libraryGame)) {
+            $this->libraryGames->add($libraryGame);
+            $libraryGame->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLibraryGame(LibraryGame $libraryGame): static
+    {
+        if ($this->libraryGames->removeElement($libraryGame)) {
+            // set the owning side to null (unless already changed)
+            if ($libraryGame->getUser() === $this) {
+                $libraryGame->setUser(null);
+            }
+        }
+
+        return $this;
     }
 }
