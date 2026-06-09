@@ -36,7 +36,7 @@ class Game
 
     #[ORM\ManyToOne(inversedBy: 'games')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?mode $mode = null;
+    private ?Mode $mode = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
@@ -44,7 +44,7 @@ class Game
     /**
      * @var Collection<int, LibraryGame>
      */
-    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'game_id')]
+    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'game')]
     private Collection $libraryGames;
 
     public function __construct()
@@ -129,12 +129,12 @@ class Game
         return $this;
     }
 
-    public function getMode(): ?mode
+    public function getMode(): ?Mode
     {
         return $this->mode;
     }
 
-    public function setMode(?mode $mode): static
+    public function setMode(?Mode $mode): static
     {
         $this->mode = $mode;
 

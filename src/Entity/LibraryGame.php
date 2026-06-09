@@ -20,11 +20,11 @@ class LibraryGame
 
     #[ORM\ManyToOne(inversedBy: 'libraryGames')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?game $game = null;
+    private ?Game $game = null;
 
     #[ORM\ManyToOne(inversedBy: 'libraryGames')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?status $status = null;
+    private ?Status $status = null;
 
     #[ORM\Column(type: Types::SMALLINT, nullable: true)]
     private ?int $personal_rating = null;
@@ -64,24 +64,24 @@ class LibraryGame
         return $this;
     }
 
-    public function getGame(): ?game
+    public function getGame(): ?Game
     {
         return $this->game;
     }
 
-    public function setGame(?game $game): static
+    public function setGame(?Game $game): static
     {
         $this->game = $game;
 
         return $this;
     }
 
-    public function getStatus(): ?status
+    public function getStatus(): ?Status
     {
         return $this->status;
     }
 
-    public function setStatus(?status $status): static
+    public function setStatus(?Status $status): static
     {
         $this->status = $status;
 
