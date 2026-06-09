@@ -44,7 +44,7 @@ class Game
     /**
      * @var Collection<int, LibraryGame>
      */
-    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'game_id')]
+    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'game')]
     private Collection $libraryGames;
 
     public function __construct()

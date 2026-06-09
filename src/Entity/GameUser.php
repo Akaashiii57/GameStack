@@ -3,10 +3,10 @@
 namespace App\Entity;
 
 use App\Repository\GameUserRepository;
+use DateTimeImmutable;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use DateTimeImmutable;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -23,7 +23,7 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 100)]
     private ?string $Username = null;
-    
+
     #[ORM\Column(length: 180)]
     private ?string $email = null;
 
@@ -39,6 +39,9 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?DateTimeImmutable $lastActivityAt = null;
+
     /**
      * @var Collection<int, LibraryGame>
      */
@@ -51,21 +54,7 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     public function getId(): ?int
-    /**
-     * @var Collection<int, LibraryGame>
-     */
-    #[ORM\OneToMany(targetEntity: LibraryGame::class, mappedBy: 'user_id')]
-    private Collection $libraryGames;
-
-    public function __construct()
     {
-        $this->libraryGames = new ArrayCollection();
-    }
-    #[ORM\Column(nullable: true)]
-    private ?DateTimeImmutable $lastActivityAt = null;
-    17bee41 (feat: Users total + en ligne)
-
-    public function getId(): ?int
         return $this->id;
     }
 
@@ -76,9 +65,8 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function setEmail(string $email): static
     {
+        $this->email = $email;
 
-    #[ORM\Column(nullable: true)]
-    private ?DateTimeImmutable $lastActivityAt = null;
         return $this;
     }
 
@@ -87,7 +75,6 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
      *
      * @see UserInterface
      */
-    
     public function getUsername(): ?string
     {
         return $this->Username;
@@ -99,7 +86,7 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
-    
+
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
@@ -186,7 +173,6 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     public function removeLibraryGame(LibraryGame $libraryGame): static
     {
         if ($this->libraryGames->removeElement($libraryGame)) {
-            // set the owning side to null (unless already changed)
             if ($libraryGame->getUser() === $this) {
                 $libraryGame->setUser(null);
             }
