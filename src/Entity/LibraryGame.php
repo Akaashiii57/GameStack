@@ -69,7 +69,7 @@ class LibraryGame
         return $this;
     }
 
-    public function getGame(): ?game
+    public function getGame(): ?Game
     {
         return $this->game;
     }
