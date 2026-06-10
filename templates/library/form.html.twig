@@ -1,10 +1,10 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Bibliothèque{% endblock %}
+{% block title %}Bibliothèque d'ajout{% endblock %}
 
 {% block body %}
 
-    <h1>Bibliothèque GameStack</h1>
+    <h1>Ajouter un jeu</h1>
 
     {# Messages flash (succès, erreur) #}
     {% for message in app.flashes('success') %}
@@ -12,5 +12,12 @@
             {{ message }}
         </div>
     {% endfor %}
+
+    {# Formulaire d'ajout #}
+    <h2>Ajouter un jeu</h2>
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <button type="submit">Ajouter à ma bibliothèque</button>
+    {{ form_end(form) }}
 
 {% endblock %}

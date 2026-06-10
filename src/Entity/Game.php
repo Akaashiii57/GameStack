@@ -34,9 +34,8 @@ class Game
     #[ORM\Column(nullable: true)]
     private ?int $estimated_playtime = null;
 
-    #[ORM\ManyToOne(inversedBy: 'games')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Mode $mode = null;
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $mode = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
@@ -129,12 +128,12 @@ class Game
         return $this;
     }
 
-    public function getMode(): ?Mode
+    public function getMode(): ?string
     {
         return $this->mode;
     }
 
-    public function setMode(?Mode $mode): static
+    public function setMode(?string $mode): static
     {
         $this->mode = $mode;
 
