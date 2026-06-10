@@ -20,7 +20,7 @@ class Game
     private ?string $title = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $cover_url = null;
+    private ?string $cover = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $developer = null;
@@ -68,14 +68,14 @@ class Game
         return $this;
     }
 
-    public function getCoverUrl(): ?string
+    public function getcover(): ?string
     {
-        return $this->cover_url;
+        return $this->cover;
     }
 
-    public function setCoverUrl(?string $cover_url): static
+    public function setcover(?string $cover): static
     {
-        $this->cover_url = $cover_url;
+        $this->cover = $cover;
 
         return $this;
     }

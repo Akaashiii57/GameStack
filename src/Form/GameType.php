@@ -16,7 +16,7 @@ class GameType extends AbstractType
     {
         $builder
             ->add('title')
-            ->add('cover_url')
+            ->add('cover')
             ->add('developer')
             ->add('publisher')
             ->add('release_date')

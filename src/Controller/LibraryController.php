@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Repository\GameRepository;
 use App\Entity\LibraryGame;
 use App\Entity\Game;
 use App\Form\GameType;
@@ -22,10 +23,13 @@ final class LibraryController extends AbstractController
     }
 
       #[Route('/library', name: 'app_library')]
-    public function index(): Response
+    public function index(GameRepository $repo): Response
     {
+
+        $cardGame = $repo->findAll();
+
         return $this->render('library/index.html.twig', [
-            'controller_name' => 'LibraryController',
+            'cardGame' => $cardGame,
         ]);
     }
 
