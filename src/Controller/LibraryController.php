@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Entity\LibraryGame;
 use App\Entity\Game;
 use App\Form\GameType;
 
@@ -21,9 +22,8 @@ final class LibraryController extends AbstractController
     }
 
       #[Route('/library', name: 'app_library')]
-    public function index(Request $request, EntityManagerInterface $em): Response
+    public function index(): Response
     {
-
         return $this->render('library/index.html.twig', [
             'controller_name' => 'LibraryController',
         ]);
@@ -40,6 +40,12 @@ final class LibraryController extends AbstractController
 
         if($form->isSubmitted() && $form->isValid()){
             $em->persist($game);
+
+            $libraryGame = new LibraryGame();
+            $libraryGame->setUser($this->getUser());
+            $libraryGame->setGame($game);
+            $em->persist($libraryGame);
+
             $em->flush();
             return $this->redirectToRoute('app_library');
         }

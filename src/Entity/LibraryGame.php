@@ -22,9 +22,8 @@ class LibraryGame
     #[ORM\JoinColumn(nullable: false)]
     private ?Game $game = null;
 
-    #[ORM\ManyToOne(inversedBy: 'libraryGames')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Status $status = null;
+    #[ORM\Column(length: 50)]
+    private ?string $status = 'souhaite';
 
     #[ORM\Column(type: Types::SMALLINT, nullable: true)]
     private ?int $personal_rating = null;
@@ -82,12 +81,12 @@ class LibraryGame
         return $this;
     }
 
-    public function getStatus(): ?status
+    public function getStatus(): ?string
     {
         return $this->status;
     }
 
-    public function setStatus(?Status $status): static
+    public function setStatus(?string $status): static
     {
         $this->status = $status;
 

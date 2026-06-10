@@ -4,13 +4,13 @@
 
 {% block body %}
 
-    <h1>Bibliothèque GameStack</h1>
-
-    {# Messages flash (succès, erreur) #}
-    {% for message in app.flashes('success') %}
-        <div style="background:#d4edda;color:#155724;padding:10px;margin:10px 0;border-radius:4px;">
-            {{ message }}
+    <div style="display: flex; flex-direction: row; background:#d4edda;color:#155724;padding:10px;margin:10px 0;border-radius:4px;">
+        <div class="title" style="width: 50%;">
+            <h1>Bibliothèque GameStack</h1>
         </div>
-    {% endfor %}
+        <div class="btn-to-form" style=" display: flex; justify-content: flex-end; align-items: center; width: 50%;">
+            <a href="{{ path('app_library_form') }}" style=" text-decoration: none; padding: 10px; border:#155724 1px solid; background-color: #1A1A2E; color:#fff; border-radius: 5px;">Ajouter un jeu</a>
+        </div>
+    </div>
 
 {% endblock %}
