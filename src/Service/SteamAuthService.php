@@ -28,6 +28,9 @@ class SteamAuthService
      */
     public function generateLoginUrl(string $returnUrl): string
     {
+        // Forcer HTTPS pour la production, mais permettre HTTP en développement
+        $returnUrl = str_replace('http://', 'https://', $returnUrl);
+        
         $params = [
             'openid.ns' => 'http://specs.openid.net/auth/2.0',
             'openid.mode' => 'checkid_setup',
