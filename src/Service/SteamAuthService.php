@@ -4,6 +4,8 @@ namespace App\Service;
 
 use App\Entity\GameUser;
 use App\Entity\SteamAccount;
+use App\Entity\Game;
+use App\Entity\LibraryGame;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,15 +30,12 @@ class SteamAuthService
      */
     public function generateLoginUrl(string $returnUrl): string
     {
-        // Forcer HTTPS pour la production, mais permettre HTTP en développement
-        $returnUrl = str_replace('http://', 'https://', $returnUrl);
-        
         $params = [
-            'openid.ns' => 'http://specs.openid.net/auth/2.0',
-            'openid.mode' => 'checkid_setup',
-            'openid.return_to' => $returnUrl,
-            'openid.realm' => $returnUrl,
-            'openid.identity' => 'http://specs.openid.net/auth/2.0/identifier_select',
+            'openid.ns'         => 'http://specs.openid.net/auth/2.0',
+            'openid.mode'       => 'checkid_setup',
+            'openid.return_to'  => $returnUrl,
+            'openid.realm'      => $returnUrl,
+            'openid.identity'   => 'http://specs.openid.net/auth/2.0/identifier_select',
             'openid.claimed_id' => 'http://specs.openid.net/auth/2.0/identifier_select',
         ];
 
@@ -135,5 +134,74 @@ class SteamAuthService
         $this->entityManager->flush();
 
         return $steamAccount;
+    }
+
+    /**
+     * Synchronise les jeux Steam avec la bibliothèque utilisateur
+     */
+    public function syncSteamGames(GameUser $user, string $steamId): int
+    {
+        $steamGames = $this->getSteamGames($steamId);
+        $importedCount = 0;
+
+        foreach ($steamGames as $steamGame) {
+            $gameName = $steamGame['name'] ?? '';
+            $appId = $steamGame['appid'] ?? 0;
+
+            if (empty($gameName) || $appId === 0) {
+                continue;
+            }
+
+            // Vérifier si le jeu existe déjà dans la bibliothèque de l'utilisateur
+            $existingLibraryGame = $this->entityManager->getRepository(LibraryGame::class)
+                ->createQueryBuilder('lg')
+                ->join('lg.game', 'g')
+                ->where('lg.user = :user')
+                ->andWhere('g.title = :title')
+                ->setParameter('user', $user)
+                ->setParameter('title', $gameName)
+                ->getQuery()
+                ->getOneOrNullResult();
+
+            if ($existingLibraryGame) {
+                // Le jeu existe déjà dans la bibliothèque
+                continue;
+            }
+
+            // Vérifier si le jeu existe déjà dans la base de données
+            $existingGame = $this->entityManager->getRepository(Game::class)
+                ->findOneBy(['title' => $gameName]);
+
+            if (!$existingGame) {
+                // Créer un nouveau jeu
+                $existingGame = new Game();
+                $existingGame->setTitle($gameName);
+                $existingGame->setDeveloper($steamGame['developer'] ?? null);
+                $existingGame->setPublisher($steamGame['publisher'] ?? null);
+                $existingGame->setMode('steam');
+                
+                // Convertir le temps de jeu Steam en minutes
+                $playtimeMinutes = $steamGame['playtime_forever'] ?? 0;
+                $existingGame->setEstimatedPlaytime($playtimeMinutes);
+
+                $this->entityManager->persist($existingGame);
+            }
+
+            // Créer l'entrée dans la bibliothèque utilisateur
+            $libraryGame = new LibraryGame();
+            $libraryGame->setUser($user);
+            $libraryGame->setGame($existingGame);
+            $libraryGame->setStatus('possédé');
+            
+            // Utiliser le temps de jeu Steam comme temps personnel
+            $playtimeMinutes = $steamGame['playtime_forever'] ?? 0;
+            $libraryGame->setPlaytime($playtimeMinutes);
+
+            $this->entityManager->persist($libraryGame);
+            $importedCount++;
+        }
+
+        $this->entityManager->flush();
+        return $importedCount;
     }
 }
