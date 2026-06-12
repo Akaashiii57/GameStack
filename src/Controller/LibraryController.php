@@ -23,9 +23,8 @@ final class LibraryController extends AbstractController
     {
         return $this->redirectToRoute('app_library', [], 301);
     }
-
-
-      #[Route('/library', name: 'app_library')]
+    
+    #[Route('/library', name: 'app_library')]
     public function index(): Response
     {
         $libraries = $this->getUser()->getLibraryGames();

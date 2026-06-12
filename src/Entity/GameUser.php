@@ -45,6 +45,9 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     private ?DateTimeImmutable $lastActivityAt = null;
 
+    #[ORM\OneToOne(targetEntity: SteamAccount::class, mappedBy: 'user', cascade: ['persist', 'remove'])]
+    private ?SteamAccount $steamAccount = null;
+
     /**
      * @var Collection<int, LibraryGame>
      */
@@ -192,6 +195,23 @@ class GameUser implements UserInterface, PasswordAuthenticatedUserInterface
                 $libraryGame->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSteamAccount(): ?SteamAccount
+    {
+        return $this->steamAccount;
+    }
+
+    public function setSteamAccount(?SteamAccount $steamAccount): static
+    {
+        // Définir la propriété owning side si nécessaire
+        if ($steamAccount && $steamAccount->getUser() !== $this) {
+            $steamAccount->setUser($this);
+        }
+
+        $this->steamAccount = $steamAccount;
 
         return $this;
     }

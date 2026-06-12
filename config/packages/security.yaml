@@ -23,7 +23,8 @@ security:
                 login_path: app_login
                 check_path: app_login
                 default_target_path: app_home
-                enable_csrf: true
+                enable_csrf: false
+                failure_path: app_login
             logout:
                 path: app_logout
                 # where to redirect after logout
@@ -37,6 +38,10 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
+        - { path: ^/steam/login, roles: PUBLIC_ACCESS }
+        - { path: ^/steam/callback, roles: PUBLIC_ACCESS }
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/register, roles: PUBLIC_ACCESS }
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/library, roles: ROLE_USER }
         - { path: ^/profile, roles: ROLE_USER }

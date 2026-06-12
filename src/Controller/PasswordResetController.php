@@ -27,12 +27,11 @@ class PasswordResetController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             
-            $user = $userRepository->findOneBy([
-                'email' => $data['email'],
-                'Username' => $data['username']
-            ]);
-
-            if ($user) {
+            // Chercher d'abord par email
+            $user = $userRepository->findOneBy(['email' => $data['email']]);
+            
+            // Vérifier manuellement le username
+            if ($user && $user->getUsername() === $data['username']) {
                 $hashedPassword = $passwordHasher->hashPassword($user, $data['newPassword']);
                 $user->setPassword($hashedPassword);
                 
