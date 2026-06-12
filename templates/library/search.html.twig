@@ -1,0 +1,40 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Bibliothèque de recherche{% endblock %}
+
+{% block body %}
+
+    <h1>Recherche un jeu</h1>
+    {% for error in app.flashes('error') %}
+        <div style="background:#edd4d4;color:#7e1717;padding:10px;margin:10px 0;border-radius:4px;">
+           <p>{{ error }}</p> 
+        </div>
+    {% endfor %}
+    <form method="GET" action="{{ path('app_library_search') }}">
+        <label for="search">Rechercher un jeu :</label>
+        <input type="search" name="search" id="search" value="{{ search ?? '' }}">
+        <button type="submit">Chercher</button>
+    </form>
+
+    {% if games is not empty %}
+        <h2>Résultats ({{ games|length }})</h2>
+        {% for game in games %}
+            <div class="result">
+                {% if game.cover %}
+                    <img src="{{ asset('uploads/covers/' ~ game.cover) }}" alt="{{ game.title }}" style="width: 80px;">
+                {% endif %}
+                <strong>{{ game.title }}</strong>
+                <span>{{ game.developer }} • {{ game.mode }}</span>
+                <form method="POST" action="{{ path('app_library_add', { id: game.id})  }}">
+                    <input type="hidden" name="search" value="{{ search }}">
+                    <button type="submit">+ Ajouter à ma bibliothèque</button>
+                </form>
+            </div>
+        {% endfor %}
+    {% elseif search %}
+        <p>Aucun jeu trouvé</p>
+        <p>Ajouter un jeu manuellement ?</p>
+        <a href="{{ path('app_library_form') }}">Créer un jeu</a>
+    {% endif %}
+
+{% endblock %}

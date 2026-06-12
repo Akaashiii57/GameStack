@@ -22,15 +22,30 @@
                 <strong>{{ registeredUsers }}</strong>
                 <p>Comptage global des comptes créés.</p>
             </article>
+
+            <article class="stat-card">
+                <span class="stat-label">Administrateurs actifs</span>
+                <strong>{{ activeAdministrators }}</strong>
+                <p>Admins actifs sur les {{ activeWindowMinutes }} dernières minutes.</p>
+            </article>
         </div>
 
         <div class="dashboard-notes">
-            <h2>Idées utiles ensuite</h2>
-            <ul>
-                <li>Afficher les 5 derniers inscrits.</li>
-                <li>Ajouter le nombre d’administrateurs actifs.</li>
-                <li>Montrer les jeux les plus consultés.</li>
-            </ul>
+            <h2>Les 5 derniers inscrits</h2>
+
+            <div class="recent-users">
+                {% for user in latestRegisteredUsers %}
+                    <article class="recent-user-card">
+                        <div>
+                            <strong>{{ user.username ?: 'Sans pseudo' }}</strong>
+                            <p>{{ user.email }}</p>
+                        </div>
+                        <span>{{ user.createdAt ? user.createdAt|date('d/m/Y H:i') : 'Date inconnue' }}</span>
+                    </article>
+                {% else %}
+                    <p>Aucun utilisateur inscrit pour le moment.</p>
+                {% endfor %}
+            </div>
         </div>
     </section>
 {% endblock %}

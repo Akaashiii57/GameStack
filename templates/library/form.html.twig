@@ -14,8 +14,7 @@
     {% endfor %}
 
     {# Formulaire d'ajout #}
-    <h2>Ajouter un jeu</h2>
-    {{ form_start(form) }}
+    {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
         {{ form_widget(form) }}
         <button type="submit">Ajouter à ma bibliothèque</button>
     {{ form_end(form) }}
