@@ -23,7 +23,7 @@ class LibraryGame
     private ?Game $game = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $status = 'souhaite';
+    private ?string $status = 'Souhaite';
 
     #[ORM\Column(type: Types::SMALLINT, nullable: true)]
     private ?int $personal_rating = null;
@@ -69,7 +69,7 @@ class LibraryGame
         return $this;
     }
 
-    public function getGame(): ?game
+    public function getGame(): ?Game
     {
         return $this->game;
     }
