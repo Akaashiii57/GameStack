@@ -51,9 +51,9 @@ class GameType extends AbstractType
                 'label' => 'Mode de jeu',
                 'choices' => [
                     'Solo' => 'solo',
-                    'Multijoueur' => 'multi',
-                    'Solo / Multijoueur' => 'solo_multi',
-                    'Jeu en coopérative' => 'coop'
+                    'Multijoueur' => 'Multijoueur',
+                    'Solo / Multijoueur' => 'Solo / Multijoueur',
+                    'Jeu en coopérative' => 'Jeu en coopérative'
                 ],
             ])
         ;

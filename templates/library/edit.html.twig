@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ lg.game.title }}{% endblock %}
+
+{% block body %}
+
+    <h1>Modifier mes infos pour {{ lg.game.title }}</h1>
+
+    {{ form_start(form) }}
+
+        {{ form_errors(form) }}
+
+        {{ form_row(form.status) }}
+        {{ form_row(form.personalRating) }}
+        {{ form_row(form.personalReview) }}
+        {{ form_row(form.playtime) }}
+        {{ form_row(form.startedAt) }}
+        {{ form_row(form.finishedAt) }}
+        {{ form_row(form.isFavorite) }}
+
+        <button type="submit">Enregistrer</button>
+
+    {{ form_end(form) }}
+
+{% endblock %}

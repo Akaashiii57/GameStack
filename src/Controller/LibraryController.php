@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use App\Form\LibraryGameType;
 use App\Entity\LibraryGame;
 use App\Entity\Game;
 use App\Form\GameType;
@@ -118,4 +119,29 @@ final class LibraryController extends AbstractController
         }
         
     }
+
+    #[Route('/library/{id}/edit', name: 'app_library_edit')]
+    public function edit(LibraryGame $libraryGame, Request $request, EntityManagerInterface $em): Response
+    {
+        if ($libraryGame->getUser() !== $this->getUser()) {
+        throw $this->createAccessDeniedException();
+        }
+
+        $form = $this->createForm(LibraryGameType::class, $libraryGame);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
+
+            return $this->redirectToRoute('app_library_jeu', [
+                'id' => $libraryGame->getId(),
+            ]);
+        }
+
+        return $this->render('library/edit.html.twig', [
+            'form' => $form,
+            'lg' => $libraryGame,
+        ]);
+    }
+
 }

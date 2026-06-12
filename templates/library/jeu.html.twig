@@ -5,77 +5,104 @@
 {% block body %}
 
 <section class="game-detail-page">
-    <div class="game-hero">
-        <div class="game-hero-overlay"></div>
-        <div class="game-detail-container">
-            <a href="{{ path('app_library') }}" class="back-link">
-                ← Retour à ma bibliothèque
-            </a>
-            <div class="game-detail-layout">
-                <div class="game-cover">
-                    <div class="game-cover-placeholder">
-                        <span>{{ lg.game.title|slice(0, 1)|upper }}</span>
-                    </div>
-                </div>
-                <div class="game-main-card">
-                    <div class="game-header">
-                        <div>
-                            <span class="game-label">Jeu de ma bibliothèque</span>
-                            <h1>{{ lg.game.title }}</h1>
-                        </div>
 
-                        {% if lg.personalRating %}
-                            <div class="rating-badge">
-                                ★ {{ lg.personalRating }}/10
+    <div 
+        class="game-hero"
+        {% if lg.game.cover %}
+            style="--game-cover: url('{{ asset('uploads/covers/' ~ lg.game.cover) }}');"
+        {% endif %}
+    >
+        <div class="game-hero-overlay"></div>
+
+        <div class="game-detail-container">
+            <div class="header-hero">
+                <div class="return-library">
+                    <a href="{{ path('app_library') }}" class="back-link">
+                        ← Retour à ma bibliothèque
+                    </a>
+                </div>
+                <div class="parameter">
+                    <a href="{{ path('app_library_edit', { id: lg.game.id } ) }}">Modifier les informations du jeu</a>
+                </div>
+           </div>
+            <div class="game-detail-layout">
+
+                <div class="game-left">
+                    <div class="game-media-card">
+                        {% if lg.game.cover %}
+                            <img 
+                                src="{{ asset('uploads/covers/' ~ lg.game.cover) }}" 
+                                alt="{{ lg.game.title }}"
+                                class="game-main-image"
+                            >
+                        {% else %}
+                            <div class="game-image-empty">
+                                {{ lg.game.title|slice(0, 1)|upper }}
                             </div>
                         {% endif %}
                     </div>
-                    <div class="game-meta">
-                        <div class="meta-item">
-                            <span>Mode</span>
-                            <strong>{{ lg.game.mode }}</strong>
-                        </div>
-                        <div class="meta-item">
-                            <span>Statut</span>
-                            <strong>{{ lg.status }}</strong>
-                        </div>
-                    </div>
-                    <div class="game-description">
+
+                    <div class="game-description-card">
                         <h2>Description</h2>
                         <p>{{ lg.game.description }}</p>
                     </div>
                 </div>
-                <aside class="game-user-card">
-                    <h2>Mes infos perso</h2>
-                    <div class="user-info-list">
-                        <div class="user-info-item">
+
+                <aside class="game-sidebar">
+                    <span class="game-label">Jeu de ma bibliothèque</span>
+
+                    <h1>{{ lg.game.title }}</h1>
+
+                    <div class="game-info-list">
+                        <div class="game-info-item">
+                            <span>Mode</span>
+                            <strong>{{ lg.game.mode }}</strong>
+                        </div>
+
+                        <div class="game-info-item">
                             <span>Statut</span>
                             <strong>{{ lg.status }}</strong>
                         </div>
-                        <div class="user-info-item">
+
+                        <div class="game-info-item">
                             <span>Ma note</span>
                             <strong>
-                                {% if lg.personalRating %}
-                                    {{ lg.personalRating }}/10
+                                {% if lg.personalRating  is not null %}
+                                    {{ lg.personalRating  }}/10
                                 {% else %}
                                     Non noté
                                 {% endif %}
                             </strong>
                         </div>
                     </div>
+
+                    {% if lg.personalRating  is not null %}
+                        <div class="rating-box">
+                            <span>★</span>
+                            <strong>{{ lg.personalRating  }}/10</strong>
+                        </div>
+                    {% endif %}
+
                     <a href="{{ path('app_library') }}" class="library-button">
                         Retour à ma bibliothèque
                     </a>
                 </aside>
+
             </div>
+
         </div>
     </div>
+
 </section>
 
 <style>
-    .game-detail-page {
+* {
+    box-sizing: border-box;
+}
+
+.game-detail-page {
     min-height: 100vh;
-    background: #0f172a;
+    background: #242424;
     color: #ffffff;
     font-family: Arial, sans-serif;
 }
@@ -83,31 +110,30 @@
 .game-hero {
     position: relative;
     min-height: 100vh;
-    padding: 40px 20px;
-    background:
-        radial-gradient(circle at top left, rgba(59, 130, 246, 0.25), transparent 35%),
-        radial-gradient(circle at top right, rgba(14, 165, 233, 0.18), transparent 30%),
-        linear-gradient(135deg, #0f172a 0%, #111827 45%, #020617 100%);
+    padding: 56px 20px 80px;
     overflow: hidden;
+    background: #242424;
 }
 
 .game-hero::before {
     content: "";
     position: absolute;
     inset: 0;
-    background:
-        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 48px 48px;
-    opacity: 0.25;
-    pointer-events: none;
+    background-image: var(--game-cover);
+    background-size: cover;
+    background-position: center;
+    filter: blur(24px);
+    transform: scale(1.12);
+    opacity: 0.22;
 }
 
 .game-hero-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, rgba(15, 23, 42, 0.2), #020617);
-    pointer-events: none;
+    background:
+        linear-gradient(to bottom, rgba(36, 36, 36, 0.35), #242424 72%),
+        linear-gradient(to right, rgba(36, 36, 36, 0.92), rgba(36, 36, 36, 0.55));
+    z-index: 1;
 }
 
 .game-detail-container {
@@ -117,259 +143,229 @@
     margin: 0 auto;
 }
 
+.header-hero{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.return-library{
+    display: flex;
+    justify-content: flex-start;
+    width: 50%;
+}
+.parameter{
+    display: flex;
+    justify-content: flex-end;
+    width: 50%;
+}
+
 .back-link {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    color: #93c5fd;
+    margin-bottom: 24px;
+    color: #d6d6d6;
+    font-size: 14px;
     text-decoration: none;
-    font-size: 15px;
-    margin-bottom: 28px;
     transition: color 0.2s ease, transform 0.2s ease;
 }
 
 .back-link:hover {
-    color: #ffffff;
-    transform: translateX(-4px);
+    color: #ff5a1f;
+    transform: translateX(-3px);
 }
 
 .game-detail-layout {
     display: grid;
-    grid-template-columns: 280px 1fr 300px;
-    gap: 28px;
-    align-items: stretch;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 26px;
+    align-items: start;
 }
 
-.game-cover {
-    min-height: 420px;
+.game-left {
+    min-width: 0;
 }
 
-.game-cover-placeholder {
-    height: 100%;
-    min-height: 420px;
-    border-radius: 22px;
-    background:
-        linear-gradient(145deg, rgba(37, 99, 235, 0.85), rgba(15, 23, 42, 0.95)),
-        radial-gradient(circle at center, rgba(255,255,255,0.2), transparent 45%);
-    border: 1px solid rgba(147, 197, 253, 0.35);
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
+.game-media-card {
+    width: 100%;
+    background: #1c1c1c;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 22px 55px rgba(0, 0, 0, 0.45);
+}
+
+.game-main-image {
+    width: 100%;
+    height: 420px;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+}
+
+.game-image-empty {
+    height: 420px;
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.game-cover-placeholder::before {
-    content: "";
-    position: absolute;
-    width: 220px;
-    height: 220px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 50%;
-    top: -60px;
-    right: -80px;
-}
-
-.game-cover-placeholder::after {
-    content: "";
-    position: absolute;
-    inset: 18px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    border-radius: 18px;
-}
-
-.game-cover-placeholder span {
-    position: relative;
-    z-index: 2;
-    font-size: 92px;
-    font-weight: 800;
+    background: linear-gradient(135deg, #333333, #141414);
     color: #ffffff;
-    text-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    font-size: 82px;
+    font-weight: 800;
 }
 
-.game-main-card,
-.game-user-card {
-    background: rgba(15, 23, 42, 0.78);
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    border-radius: 22px;
-    backdrop-filter: blur(14px);
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
+.game-description-card {
+    margin-top: 28px;
+    padding: 26px;
+    background: #2b2b2b;
+    border: 1px solid #383838;
+    border-radius: 6px;
 }
 
-.game-main-card {
-    padding: 34px;
+.game-description-card h2 {
+    margin: 0 0 16px;
+    font-size: 22px;
+    color: #ffffff;
 }
 
-.game-header {
-    display: flex;
-    justify-content: space-between;
-    gap: 24px;
-    align-items: flex-start;
-    margin-bottom: 30px;
+.game-description-card p {
+    margin: 0;
+    color: #cfcfcf;
+    font-size: 15px;
+    line-height: 1.7;
+}
+
+.game-sidebar {
+    position: sticky;
+    top: 24px;
+    padding: 24px;
+    background: #2b2b2b;
+    border: 1px solid #3b3b3b;
+    border-radius: 6px;
+    box-shadow: 0 22px 55px rgba(0, 0, 0, 0.38);
 }
 
 .game-label {
     display: inline-block;
-    color: #60a5fa;
-    font-size: 13px;
+    margin-bottom: 12px;
+    color: #ff5a1f;
+    font-size: 12px;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    margin-bottom: 10px;
 }
 
-.game-header h1 {
-    margin: 0;
-    font-size: clamp(32px, 4vw, 54px);
-    line-height: 1;
+.game-sidebar h1 {
+    margin: 0 0 22px;
     color: #ffffff;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 800;
 }
 
-.rating-badge {
-    flex-shrink: 0;
-    padding: 12px 16px;
-    border-radius: 14px;
-    background: rgba(250, 204, 21, 0.12);
-    border: 1px solid rgba(250, 204, 21, 0.4);
-    color: #fde68a;
-    font-weight: 700;
-    font-size: 17px;
-}
-
-.game-meta {
+.game-info-list {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-    margin-bottom: 34px;
+    gap: 12px;
+    margin-bottom: 20px;
 }
 
-.meta-item {
-    padding: 18px;
-    border-radius: 16px;
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid rgba(148, 163, 184, 0.16);
+.game-info-item {
+    padding: 15px;
+    background: #242424;
+    border: 1px solid #383838;
+    border-radius: 5px;
 }
 
-.meta-item span,
-.user-info-item span {
+.game-info-item span {
     display: block;
-    color: #94a3b8;
-    font-size: 13px;
-    margin-bottom: 8px;
+    margin-bottom: 7px;
+    color: #9f9f9f;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
-.meta-item strong,
-.user-info-item strong {
+.game-info-item strong {
     display: block;
     color: #ffffff;
-    font-size: 18px;
+    font-size: 16px;
+    font-weight: 700;
 }
 
-.game-description {
-    padding-top: 28px;
-    border-top: 1px solid rgba(148, 163, 184, 0.18);
-}
-
-.game-description h2 {
-    margin: 0 0 14px;
-    font-size: 24px;
-    color: #ffffff;
-}
-
-.game-description p {
-    margin: 0;
-    color: #cbd5e1;
-    font-size: 17px;
-    line-height: 1.7;
-}
-
-.game-user-card {
-    padding: 28px;
-}
-
-.game-user-card h2 {
-    margin: 0 0 26px;
-    font-size: 24px;
-    color: #60a5fa;
-}
-
-.user-info-list {
+.rating-box {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 28px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #ff5a1f, #ff7a1f);
+    border-radius: 5px;
+    color: #ffffff;
 }
 
-.user-info-item {
-    padding: 18px;
-    border-radius: 16px;
-    background: rgba(30, 41, 59, 0.72);
-    border: 1px solid rgba(148, 163, 184, 0.16);
+.rating-box span {
+    font-size: 22px;
+}
+
+.rating-box strong {
+    font-size: 20px;
 }
 
 .library-button {
     display: flex;
-    justify-content: center;
     align-items: center;
-    width: 100%;
+    justify-content: center;
     min-height: 48px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #2563eb, #0ea5e9);
+    width: 100%;
+    padding: 0 18px;
+    background: #ff5a1f;
+    border-radius: 5px;
     color: #ffffff;
-    text-decoration: none;
+    font-size: 14px;
     font-weight: 700;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.2s ease;
 }
 
 .library-button:hover {
+    background: #ff6b2b;
     transform: translateY(-2px);
-    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.35);
 }
 
-@media (max-width: 1050px) {
-    .game-detail-layout {
-        grid-template-columns: 240px 1fr;
-    }
-
-    .game-user-card {
-        grid-column: 1 / -1;
-    }
-}
-
-@media (max-width: 720px) {
+@media (max-width: 900px) {
     .game-hero {
-        padding: 24px 16px;
+        padding: 32px 16px 60px;
     }
 
     .game-detail-layout {
         grid-template-columns: 1fr;
     }
 
-    .game-cover {
-        min-height: auto;
+    .game-sidebar {
+        position: static;
     }
 
-    .game-cover-placeholder {
-        min-height: 300px;
+    .game-main-image,
+    .game-image-empty {
+        height: 330px;
+    }
+}
+
+@media (max-width: 560px) {
+    .game-main-image,
+    .game-image-empty {
+        height: 240px;
     }
 
-    .game-main-card,
-    .game-user-card {
-        padding: 22px;
-        border-radius: 18px;
+    .game-sidebar,
+    .game-description-card {
+        padding: 20px;
     }
 
-    .game-header {
-        flex-direction: column;
-    }
-
-    .game-meta {
-        grid-template-columns: 1fr;
-    }
-
-    .game-header h1 {
-        font-size: 34px;
+    .game-sidebar h1 {
+        font-size: 25px;
     }
 }
 </style>
+
 {% endblock %}
