@@ -14,7 +14,7 @@ class SteamAccount
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\OneToOne(inversedBy: 'steamAccount')]
     #[ORM\JoinColumn(nullable: false)]
     private ?GameUser $user = null;
 

@@ -1,22 +1,24 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Bibliothèque d'ajout{% endblock %}
+{% block title %}Ajouter un jeu{% endblock %}
 
 {% block body %}
-
-    <h1>Ajouter un jeu</h1>
-
-    {# Messages flash (succès, erreur) #}
+<section class="page-shell">
     {% for message in app.flashes('success') %}
-        <div style="background:#d4edda;color:#155724;padding:10px;margin:10px 0;border-radius:4px;">
-            {{ message }}
-        </div>
+        <div class="flash flash-success">{{ message }}</div>
     {% endfor %}
 
-    {# Formulaire d'ajout #}
-    {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
-        {{ form_widget(form) }}
-        <button type="submit">Ajouter à ma bibliothèque</button>
-    {{ form_end(form) }}
-
+    <div class="form-panel">
+        <div class="form-panel-head">
+            <p class="page-eyebrow">Nouvelle fiche</p>
+            <h2>Ajouter un jeu</h2>
+        </div>
+        <div class="form-panel-body">
+            {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+                {{ form_widget(form) }}
+                <button type="submit" class="btn btn-primary btn-block">Ajouter à ma bibliothèque</button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</section>
 {% endblock %}

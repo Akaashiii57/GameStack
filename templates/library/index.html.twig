@@ -3,67 +3,59 @@
 {% block title %}Bibliothèque{% endblock %}
 
 {% block body %}
-    <section>
-        <div style="display: flex; flex-direction: row; background:#d4edda;color:#155724;padding:10px;margin:10px 0;border-radius:4px;">
-            <div class="title" style="width: 50%;">
-                <h1>Bibliothèque GameStack</h1>
-            </div>
-            <div class="btn-to-form" style=" display: flex; justify-content: flex-end; align-items: center; width: 50%;">
-                <a href="{{ path('app_library_search') }}" style=" text-decoration: none; padding: 10px; border:#155724 1px solid; background-color: #1A1A2E; color:#fff; border-radius: 5px;">Ajouter un jeu</a>
-            </div>
+<section class="page-shell">
+    <div class="library-head">
+        <div>
+            <p class="page-eyebrow">Ma collection</p>
+            <h1 class="page-title">Bibliothèque <em>GameStack</em></h1>
         </div>
-        <div class="library">
-            <h2>Vos jeux :</h2>
-            {% if libraries is empty %}
-                <p>Vous n'avez pas encore ajouter de jeux !</p>
-            {% else %}
-            <div class="wrapper-game" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; justify-content: center; align-items: stretch;">
-                {% for lg in libraries %}
-                    <div class="cardGame" style="display: flex; flex-direction: column; width: 100%; max-width: 340px; border-radius: 22px; overflow: hidden; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10); font-family: Arial, sans-serif; color: #1f2937; background-color: #FFFFFF; transition: transform 0.2s ease, box-shadow 0.2s ease;">
-                        <div class="card-cover" style="width: 100%; height: 190px; background-color: #eeeeee; display: flex; align-items: center; justify-content: center; overflow: hidden; color: #888; font-size: 14px;">
-                            {% if lg.game.cover %}
-                                <img src="{{ asset('uploads/covers/' ~ lg.game.cover) }}" alt="{{ lg.game.title }}" style="width: 100%; height: 100%; object-fit: cover;">
-                            {% else %}
-                                Pas de jaquette
+        <a href="{{ path('app_library_search') }}" class="btn btn-primary">+ Ajouter un jeu</a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="flash flash-success">{{ message }}</div>
+    {% endfor %}
+
+    {% if libraries is empty %}
+        <div class="empty-state">
+            <p>Vous n'avez pas encore ajouté de jeux !</p>
+        </div>
+    {% else %}
+        <div class="wrapper-game">
+            {% for lg in libraries %}
+                <div class="cardGame">
+                    <div class="card-cover">
+                        {% if lg.game.cover %}
+                            <img src="{{ asset('uploads/covers/' ~ lg.game.cover) }}" alt="{{ lg.game.title }}">
+                        {% else %}
+                            Pas de jaquette
+                        {% endif %}
+                    </div>
+                    <div class="card-content">
+                        <span class="card-mode">{{ lg.game.mode }}</span>
+                        <h4>{{ lg.game.title }}</h4>
+                        <p class="card-desc">{{ lg.game.description }}</p>
+                        <div class="card-informations">
+                            <p><strong>Développeur :</strong> {{ lg.game.developer }}</p>
+                            <p><strong>Éditeur :</strong> {{ lg.game.publisher }}</p>
+                            {% if lg.game.releaseDate %}
+                                <p><strong>Date de sortie :</strong> {{ lg.game.releaseDate|date('d/m/Y') }}</p>
+                            {% endif %}
+                            {% if lg.game.estimatedPlaytime %}
+                                <p><strong>Temps de jeu estimé :</strong> {{ lg.game.estimatedPlaytime }} h</p>
                             {% endif %}
                         </div>
-                        <div class="card-content" style="display: flex; flex-direction: column; padding: 18px; background-color: #FFFFFF; flex: 1;">
-                            <span style="display: inline-block; width: fit-content; background: #eef2ff; color: #3b4cca; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.4px;">
-                                {{ lg.game.mode }}
-                            </span>
-                            <h4 style="font-size: 21px; line-height: 1.2; margin: 0 0 10px; color: #111827;">
-                                {{ lg.game.title }}
-                            </h4>
-                            <p style="font-size: 14px; line-height: 1.6; color: #6b7280; margin: 0 0 18px;">
-                                {{ lg.game.description }}
-                            </p>
-                            <div class="card-informations" style="display: flex; flex-direction: column; gap: 6px; background-color: #F9FAFB; padding: 14px; border-radius: 14px; margin-bottom: 18px; border: 1px solid #eeeeee;">
-                                <p style="margin: 0; font-size: 14px; color: #374151;">
-                                    <strong style="color: #111827;">Développeur :</strong> {{ lg.game.developer }}
-                                </p>
-                                <p style="margin: 0; font-size: 14px; color: #374151;">
-                                    <strong style="color: #111827;">Éditeur :</strong> {{ lg.game.publisher }}
-                                </p>
-                                {% if lg.game.releaseDate %}
-                                    <p style="margin: 0; font-size: 14px; color: #374151;">
-                                        <strong style="color: #111827;">Date de sortie :</strong> {{ lg.game.releaseDate|date('d/m/Y') }}
-                                    </p>
-                                {% endif %}
-                                {% if lg.game.releaseDate %}
-                                    <p style="margin: 0; font-size: 14px; color: #374151;">
-                                        <strong style="color: #111827;">Temps de jeu estimé :</strong> {{ lg.game.estimatedPlaytime}} h
-                                    </p>
-                                {% endif %}
-                            </div>
-                            <a href="{{ path('app_library_jeu', { id: lg.id }) }}" style="display: block; margin-top: auto; text-align: center; background: #111827; color: #fff; text-decoration: none; padding: 13px 16px; border-radius: 12px; font-size: 14px; font-weight: 700;">
-                                Voir le jeu
-                            </a>
+                        <div class="card-actions">
+                            <a href="{{ path('app_library_jeu', { id: lg.id }) }}" class="card-cta">Voir le jeu</a>
+                            <form method="POST" action="{{ path('app_library_delete', { id: lg.id }) }}" onsubmit="return confirm('Retirer « {{ lg.game.title|e('js') }} » de ta bibliothèque ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ lg.id) }}">
+                                <button type="submit" class="card-delete" title="Retirer de ma bibliothèque">Supprimer</button>
+                            </form>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
-            {% endif %}
+                </div>
+            {% endfor %}
         </div>
-    </section>
-
+    {% endif %}
+</section>
 {% endblock %}

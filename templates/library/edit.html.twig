@@ -3,23 +3,27 @@
 {% block title %}Modifier {{ lg.game.title }}{% endblock %}
 
 {% block body %}
+<section class="page-shell">
+    <div class="form-panel">
+        <div class="form-panel-head">
+            <p class="page-eyebrow">Mes infos perso</p>
+            <h2>Modifier {{ lg.game.title }}</h2>
+        </div>
+        <div class="form-panel-body">
+            {{ form_start(form) }}
+                {{ form_errors(form) }}
 
-    <h1>Modifier mes infos pour {{ lg.game.title }}</h1>
+                {{ form_row(form.status) }}
+                {{ form_row(form.personalRating) }}
+                {{ form_row(form.personalReview) }}
+                {{ form_row(form.playtime) }}
+                {{ form_row(form.startedAt) }}
+                {{ form_row(form.finishedAt) }}
+                {{ form_row(form.isFavorite) }}
 
-    {{ form_start(form) }}
-
-        {{ form_errors(form) }}
-
-        {{ form_row(form.status) }}
-        {{ form_row(form.personalRating) }}
-        {{ form_row(form.personalReview) }}
-        {{ form_row(form.playtime) }}
-        {{ form_row(form.startedAt) }}
-        {{ form_row(form.finishedAt) }}
-        {{ form_row(form.isFavorite) }}
-
-        <button type="submit">Enregistrer</button>
-
-    {{ form_end(form) }}
-
+                <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</section>
 {% endblock %}
