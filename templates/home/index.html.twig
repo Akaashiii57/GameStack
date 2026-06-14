@@ -3,90 +3,65 @@
 {% block title %}GameStack - Gestionnaire de jeux{% endblock %}
 
 {% block body %}
-<!-- Section Hero -->
-<div class="hero-section" style="background: linear-gradient(135deg, #1A1A2E 0%, #16213E 100%); color: white; padding: 80px 0; text-align: center;">
-    <div class="container">
-        <h1 style="font-size: 3rem; margin-bottom: 20px;">Bienvenue sur GameStack</h1>
-        <p style="font-size: 1.2rem; margin-bottom: 40px;">Gérez votre collection de jeux en un seul endroit</p>
-        
-        {% if app.user %}
-            <!-- Utilisateur connecté -->
-            {% if hasSteamAccount %}
-                <!-- Compte Steam déjà lié -->
-                <div class="steam-linked" style="display: inline-flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin-bottom: 30px;">
-                    <img src="{{ app.user.steamAccount.avatar }}" width="50" height="50" style="border-radius: 50%;">
-                    <div style="text-align: left;">
-                        <strong>Compte Steam lié</strong><br>
-                        <small>{{ steamGamesCount ?? 0 }} jeux synchronisés</small>
-                    </div>
-                </div>
+<section class="landing-hero">
+    <p class="hero-eyebrow">Ta collection, un seul endroit</p>
+    <h1 class="hero-title">Bienvenue sur <em>GameStack</em></h1>
+    <p class="hero-sub">Gérez votre collection de jeux, suivez vos statuts, vos notes et votre temps de jeu — sans rien perdre.</p>
+
+    {% if app.user %}
+        {% if hasSteamAccount %}
+            <div class="steam-linked">
+                <img src="{{ app.user.steamAccount.avatar }}" width="50" height="50" alt="Avatar Steam">
                 <div>
-                    <a href="{{ path('app_library') }}" class="btn btn-primary" style="background: #007bff; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; margin: 0 10px;">
-                        Voir ma bibliothèque
-                    </a>
-                    <a href="{{ path('app_steam_sync') }}" class="btn btn-secondary" style="background: #6c757d; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none; margin: 0 10px;">
-                        Resynchroniser Steam
-                    </a>
+                    <strong>Compte Steam lié</strong><br>
+                    <small class="muted">{{ steamGamesCount ?? 0 }} jeux synchronisés</small>
                 </div>
-            {% else %}
-                <!-- Bouton pour lier Steam -->
-                <a href="{{ path('app_steam_login') }}" class="btn btn-steam-large" style="background: #171a21; color: white; padding: 15px 30px; border-radius: 5px; text-decoration: none; font-size: 1.1rem; margin-bottom: 30px;">
-                    <i class="fab fa-steam me-2"></i>Lier mon compte Steam
-                </a>
-                <br>
-                <a href="{{ path('app_library') }}" class="btn btn-primary" style="background: #007bff; color: white; padding: 12px 30px; border-radius: 5px; text-decoration: none;">
-                    Gérer mes jeux manuellement
-                </a>
-            {% endif %}
+            </div>
+            <div class="hero-actions">
+                <a href="{{ path('app_library') }}" class="btn btn-primary">Voir ma bibliothèque</a>
+                <a href="{{ path('app_steam_sync') }}" class="btn btn-ghost">Resynchroniser Steam</a>
+            </div>
         {% else %}
-            <!-- Utilisateur non connecté -->
-            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-                <a href="{{ path('app_register') }}" class="btn btn-primary" style="background: #007bff; color: white; padding: 15px 30px; border-radius: 5px; text-decoration: none; font-size: 1.1rem;">
-                    Créer un compte
+            <div class="hero-actions">
+                <a href="{{ path('app_steam_login') }}" class="btn-steam">
+                    <i class="fab fa-steam"></i> Lier mon compte Steam
                 </a>
-                <a href="{{ path('app_login') }}" class="btn btn-outline-light" style="border: 2px solid white; color: white; padding: 15px 30px; border-radius: 5px; text-decoration: none; font-size: 1.1rem;">
-                    Se connecter
-                </a>
+                <a href="{{ path('app_library') }}" class="btn btn-primary">Gérer mes jeux manuellement</a>
             </div>
         {% endif %}
-    </div>
-</div>
-
-<!-- Section Fonctionnalités -->
-<div class="features-section" style="padding: 60px 0; background: #f8f9fa;">
-    <div class="container">
-        <h2 style="text-align: center; margin-bottom: 40px;">Pourquoi utiliser GameStack ?</h2>
-        <div class="row" style="display: flex; flex-wrap: wrap; gap: 30px; justify-content: center;">
-            <div class="feature" style="flex: 1; min-width: 300px; text-align: center;">
-                <h4 style="color: #1A1A2E;">📚 Synchronisation Steam</h4>
-                <p>Importez automatiquement tous vos jeux Steam en un clic</p>
-            </div>
-            <div class="feature" style="flex: 1; min-width: 300px; text-align: center;">
-                <h4 style="color: #1A1A2E;">🎮 Gestion unifiée</h4>
-                <p>Vos jeux Steam et manuels dans une seule bibliothèque</p>
-            </div>
-            <div class="feature" style="flex: 1; min-width: 300px; text-align: center;">
-                <h4 style="color: #1A1A2E;">📊 Suivi détaillé</h4>
-                <p>Statuts, temps de jeu, notes personnelles et bien plus</p>
-            </div>
+    {% else %}
+        <div class="hero-actions">
+            <a href="{{ path('app_register') }}" class="btn btn-primary">Créer un compte</a>
+            <a href="{{ path('app_login') }}" class="btn btn-ghost">Se connecter</a>
         </div>
+    {% endif %}
+</section>
+
+<div class="features">
+    <div class="feature">
+        <h4>📚 Synchronisation Steam</h4>
+        <p>Importez automatiquement tous vos jeux Steam en un clic.</p>
+    </div>
+    <div class="feature">
+        <h4>🎮 Gestion unifiée</h4>
+        <p>Vos jeux Steam et manuels dans une seule bibliothèque.</p>
+    </div>
+    <div class="feature">
+        <h4>📊 Suivi détaillé</h4>
+        <p>Statuts, temps de jeu, notes personnelles et bien plus.</p>
     </div>
 </div>
 
-<!-- Section Statistiques (si admin) -->
 {% if is_granted('ROLE_ADMIN') %}
-<div class="stats-section" style="padding: 40px 0; background: #e9ecef;">
-    <div class="container">
-        <h3 style="text-align: center; margin-bottom: 30px;">Statistiques du site</h3>
-        <div style="display: flex; justify-content: center; gap: 40px;">
-            <div style="text-align: center;">
-                <div style="font-size: 2rem; font-weight: bold; color: #1A1A2E;">{{ registeredUsers ?? 0 }}</div>
-                <div>Utilisateurs inscrits</div>
-            </div>
-            <div style="text-align: center;">
-                <div style="font-size: 2rem; font-weight: bold; color: #1A1A2E;">{{ onlineUsers ?? 0 }}</div>
-                <div>Utilisateurs en ligne</div>
-            </div>
+<div class="page-shell">
+    <div class="home-stats">
+        <div class="home-stat">
+            <div class="home-stat-value">{{ registeredUsers ?? 0 }}</div>
+            <div class="home-stat-label">Utilisateurs inscrits</div>
+        </div>
+        <div class="home-stat">
+            <div class="home-stat-value">{{ onlineUsers ?? 0 }}</div>
+            <div class="home-stat-label">Utilisateurs en ligne</div>
         </div>
     </div>
 </div>

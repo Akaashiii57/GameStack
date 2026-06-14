@@ -1,3 +1,6 @@
+/* Le design system complet est dans public/css/style.css.
+   Ce fichier est chargé via l'importmap (AssetMapper) — on le garde
+   minimal et aligné sur le thème sombre pour éviter tout conflit. */
 body {
-    background-color: skyblue;
+    background-color: #100E0B;
 }

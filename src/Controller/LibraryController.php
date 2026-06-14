@@ -119,6 +119,25 @@ final class LibraryController extends AbstractController
         
     }
 
+    #[Route('/library/{id}/delete', name: 'app_library_delete', methods: ['POST'])]
+    public function delete(LibraryGame $libraryGame, Request $request, EntityManagerInterface $em): Response
+    {
+        // Empêche de supprimer la carte d'un autre utilisateur
+        if ($libraryGame->getUser() !== $this->getUser()) {
+            throw $this->createAccessDeniedException();
+        }
+
+        // Vérifie le token CSRF (protection contre les suppressions forcées)
+        if ($this->isCsrfTokenValid('delete' . $libraryGame->getId(), $request->request->get('_token'))) {
+            // On retire uniquement le lien user <-> jeu, pas le jeu du catalogue
+            $em->remove($libraryGame);
+            $em->flush();
+            $this->addFlash('success', 'Jeu retiré de ta bibliothèque.');
+        }
+
+        return $this->redirectToRoute('app_library');
+    }
+
     #[Route('/library/{id}/edit', name: 'app_library_edit')]
     public function edit(LibraryGame $libraryGame, Request $request, EntityManagerInterface $em): Response
     {
