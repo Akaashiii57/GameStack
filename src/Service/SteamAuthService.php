@@ -8,8 +8,6 @@ use App\Entity\Game;
 use App\Entity\LibraryGame;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class SteamAuthService
@@ -22,7 +20,6 @@ class SteamAuthService
         private HttpClientInterface $httpClient,
         private string $steamApiKey
     ) {
-        $this->httpClient = HttpClient::create();
     }
 
     /**
@@ -30,11 +27,19 @@ class SteamAuthService
      */
     public function generateLoginUrl(string $returnUrl): string
     {
+        // openid.realm = racine du site (ex: http://localhost:8000/)
+        $parsedUrl = parse_url($returnUrl);
+        $realm = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+        if (isset($parsedUrl['port'])) {
+            $realm .= ':' . $parsedUrl['port'];
+        }
+        $realm .= '/';
+
         $params = [
             'openid.ns'         => 'http://specs.openid.net/auth/2.0',
             'openid.mode'       => 'checkid_setup',
             'openid.return_to'  => $returnUrl,
-            'openid.realm'      => $returnUrl,
+            'openid.realm'      => $realm,
             'openid.identity'   => 'http://specs.openid.net/auth/2.0/identifier_select',
             'openid.claimed_id' => 'http://specs.openid.net/auth/2.0/identifier_select',
         ];
