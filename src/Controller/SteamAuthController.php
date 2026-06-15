@@ -4,16 +4,15 @@ namespace App\Controller;
 
 use App\Entity\GameUser;
 use App\Entity\SteamAccount;
+use App\Security\SteamAuthenticator;
 use App\Service\SteamAuthService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Authenticator\FormLoginAuthenticator;
-use Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge;
+use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
 
 final class SteamAuthController extends AbstractController
 {
@@ -37,7 +36,8 @@ final class SteamAuthController extends AbstractController
         SteamAuthService $steamAuthService,
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
-        Security $security
+        UserAuthenticatorInterface $userAuthenticator,
+        SteamAuthenticator $steamAuthenticator
     ): Response {
         // Valider la réponse OpenID de Steam
         $steamId = $steamAuthService->validateOpenIdResponse($request);
@@ -78,6 +78,8 @@ final class SteamAuthController extends AbstractController
         $steamAccount = $entityManager->getRepository(SteamAccount::class)
             ->findOneBy(['steamId' => $steamId]);
 
+        $isNewUser = false;
+
         if ($steamAccount) {
             // Compte existant : connecter l'utilisateur
             $user = $steamAccount->getUser();
@@ -96,17 +98,24 @@ final class SteamAuthController extends AbstractController
                 $user->setRoles(['ROLE_USER']);
                 $entityManager->persist($user);
                 $entityManager->flush();
+                $isNewUser = true;
             }
 
             // Lier le compte Steam
             $steamAuthService->linkSteamAccount($user, $steamId, $profileData);
         }
 
-        // Connecter l'utilisateur via Symfony Security
-        $security->login($user, 'form_login', 'main');
+        // Synchroniser la bibliothèque Steam (première connexion ou synchro silencieuse)
+        $importedCount = $steamAuthService->syncSteamGames($user, $steamId);
+        if ($importedCount > 0) {
+            $this->addFlash('success', sprintf('Connecté via Steam ! %d jeux importés depuis votre bibliothèque.', $importedCount));
+        } else {
+            $this->addFlash('success', 'Connecté via Steam avec succès !');
+        }
 
-        $this->addFlash('success', 'Connecté via Steam avec succès !');
-        return $this->redirectToRoute('app_home');
+        // Connecter l'utilisateur via Symfony Security
+        return $userAuthenticator->authenticateUser($user, $steamAuthenticator, $request)
+            ?? $this->redirectToRoute('app_home');
     }
 
     #[Route('/steam/sync', name: 'app_steam_sync')]

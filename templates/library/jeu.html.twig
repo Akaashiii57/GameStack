@@ -66,22 +66,18 @@
 
                         <div class="game-info-item">
                             <span>Ma note</span>
-                            <strong>
-                                {% if lg.personalRating  is not null %}
-                                    {{ lg.personalRating  }}/10
-                                {% else %}
-                                    Non noté
-                                {% endif %}
-                            </strong>
+                            {% if lg.personalRating  is not null %}
+                                <div class="rating-box">
+                                    <span>★</span>
+                                    <strong>{{ lg.personalRating  }}/10</strong>
+                                </div>
+                            {% else %}
+                                Non noté
+                            {% endif %}
                         </div>
                     </div>
 
-                    {% if lg.personalRating  is not null %}
-                        <div class="rating-box">
-                            <span>★</span>
-                            <strong>{{ lg.personalRating  }}/10</strong>
-                        </div>
-                    {% endif %}
+                    
 
                     <a href="{{ path('app_library') }}" class="library-button">
                         Retour à ma bibliothèque
