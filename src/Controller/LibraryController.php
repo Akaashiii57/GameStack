@@ -26,15 +26,33 @@ final class LibraryController extends AbstractController
     }
     
     #[Route('/library', name: 'app_library')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         /** @var \App\Entity\GameUser $user */
         $user = $this->getUser();
-        $libraries = $user->getLibraryGames();
+        
+        // Récupérer le paramètre de tri
+        $sort = $request->query->get('sort', 'az'); // Par défaut: A-Z
+        
+        // Trier les jeux
+        $libraries = $user->getLibraryGames()->toArray();
+        
+        if ($sort === 'za') {
+            // Tri Z-A
+            usort($libraries, function($a, $b) {
+                return strcasecmp($b->getGame()->getTitle(), $a->getGame()->getTitle());
+            });
+        } else {
+            // Tri A-Z (défaut)
+            usort($libraries, function($a, $b) {
+                return strcasecmp($a->getGame()->getTitle(), $b->getGame()->getTitle());
+            });
+        }
 
         return $this->render('library/index.html.twig', [
             'libraries' => $libraries,
             'user' => $user,
+            'current_sort' => $sort,
         ]);
     }
 

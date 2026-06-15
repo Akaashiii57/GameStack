@@ -39,18 +39,117 @@
 
 <div class="features">
     <div class="feature">
-        <h4>📚 Synchronisation Steam</h4>
+        <h4 class="display">Synchronisation Steam</h4>
         <p>Importez automatiquement tous vos jeux Steam en un clic.</p>
     </div>
     <div class="feature">
-        <h4>🎮 Gestion unifiée</h4>
+        <h4 class="display">Gestion unifiée</h4>
         <p>Vos jeux Steam et manuels dans une seule bibliothèque.</p>
     </div>
     <div class="feature">
-        <h4>📊 Suivi détaillé</h4>
+        <h4 class="display">Suivi détaillé</h4>
         <p>Statuts, temps de jeu, notes personnelles et bien plus.</p>
     </div>
 </div>
+
+<section class="how-it-works">
+    <div class="page-shell">
+        <h2 class="display">Comment ça marche</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3 class="display">Créez votre compte</h3>
+                <p>Inscrivez-vous gratuitement sur GameStack en quelques secondes.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3 class="display">Liez votre compte Steam</h3>
+                <p>Connectez votre compte Steam pour importer automatiquement votre bibliothèque.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3 class="display">Organisez vos jeux</h3>
+                <p>Suivez vos jeux, ajoutez des notes, des évaluations et gérez votre collection.</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3 class="display">Analysez vos statistiques</h3>
+                <p>Consultez vos temps de jeu, statuts et progressions en un seul endroit.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="advanced-features">
+    <div class="page-shell">
+        <h2 class="display">Fonctionnalités avancées</h2>
+        <div class="features-grid">
+            <div class="advanced-feature">
+                <h4 class="display">Catégorisation intelligente</h4>
+                <p>Triez vos jeux par statut : À faire, En cours, Terminé ou Abandonné.</p>
+            </div>
+            <div class="advanced-feature">
+                <h4 class="display">Système d'évaluation</h4>
+                <p>Notez vos jeux de 1 à 10 et conservez vos avis personnels.</p>
+            </div>
+            <div class="advanced-feature">
+                <h4 class="display">Suivi du temps</h4>
+                <p>Enregistrez vos heures de jeu et suivez votre progression.</p>
+            </div>
+            <div class="advanced-feature">
+                <h4 class="display">Synchronisation automatique</h4>
+                <p>Vos données Steam sont mises à jour automatiquement à chaque resynchronisation.</p>
+            </div>
+            <div class="advanced-feature">
+                <h4 class="display">Recherche avancée</h4>
+                <p>Trouvez rapidement un jeu dans votre collection avec la barre de recherche.</p>
+            </div>
+            <div class="advanced-feature">
+                <h4 class="display">Interface intuitive</h4>
+                <p>Une interface simple et élégante pour une meilleure expérience utilisateur.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="benefits">
+    <div class="page-shell">
+        <h2 class="display">Pourquoi choisir GameStack ?</h2>
+        <div class="benefits-list">
+            <div class="benefit">
+                <h4 class="display">Centralisé</h4>
+                <p>Gérez tous vos jeux au même endroit, qu'ils viennent de Steam ou d'ailleurs.</p>
+            </div>
+            <div class="benefit">
+                <h4 class="display">Gratuit</h4>
+                <p>GameStack est entièrement gratuit. Aucun abonnement, aucune limite.</p>
+            </div>
+            <div class="benefit">
+                <h4 class="display">Sécurisé</h4>
+                <p>Vos données sont sécurisées et votre confidentialité est respectée.</p>
+            </div>
+            <div class="benefit">
+                <h4 class="display">Toujours à jour</h4>
+                <p>Synchronisez votre bibliothèque Steam quand vous le souhaitez.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta-section">
+    <div class="page-shell">
+        <h2 class="display">Prêt à commencer ?</h2>
+        <p>Rejoignez des milliers de joueurs qui organisent leur collection avec GameStack.</p>
+        <div class="cta-buttons">
+            {% if not app.user %}
+                <a href="{{ path('app_register') }}" class="btn btn-primary btn-large">Créer un compte</a>
+                <a href="{{ path('app_login') }}" class="btn btn-ghost btn-large">Se connecter</a>
+            {% else %}
+                <a href="{{ path('app_library') }}" class="btn btn-primary btn-large">Aller à ma bibliothèque</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
 
 {% if is_granted('ROLE_ADMIN') %}
 <div class="page-shell">
@@ -66,5 +165,235 @@
     </div>
 </div>
 {% endif %}
+
+<style>
+.page-shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* How it works section */
+.how-it-works {
+    background: var(--surface);
+    padding: 60px 20px;
+    margin: 40px 0;
+}
+
+.how-it-works h2 {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 40px;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+}
+
+.step {
+    text-align: center;
+    padding: 20px;
+}
+
+.step-number {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 50%;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.step h3 {
+    font-size: 20px;
+    margin: 15px 0 10px;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+.step p {
+    color: var(--text-2);
+    line-height: 1.6;
+    font-family: var(--font-body);
+}
+
+/* Advanced features section */
+.advanced-features {
+    padding: 60px 20px;
+    margin: 40px 0;
+}
+
+.advanced-features h2 {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 40px;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.advanced-feature {
+    padding: 25px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    transition: all 0.3s;
+}
+
+.advanced-feature:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--accent);
+}
+
+.advanced-feature h4 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+.advanced-feature p {
+    color: var(--text-2);
+    line-height: 1.6;
+    font-size: 14px;
+    font-family: var(--font-body);
+}
+
+/* Benefits section */
+.benefits {
+    background: var(--surface);
+    padding: 60px 20px;
+    margin: 40px 0;
+}
+
+.benefits h2 {
+    text-align: center;
+    font-size: 32px;
+    margin-bottom: 40px;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+.benefits-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+}
+
+.benefit {
+    text-align: center;
+    padding: 20px;
+}
+
+.benefit h4 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: var(--accent);
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+.benefit p {
+    color: var(--text-2);
+    line-height: 1.6;
+    font-family: var(--font-body);
+}
+
+/* CTA section */
+.cta-section {
+    padding: 60px 20px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--bg);
+    margin: 40px 0;
+}
+
+.cta-section h2 {
+    font-size: 36px;
+    margin-bottom: 15px;
+    font-family: var(--font-display);
+    font-weight: 600;
+}
+
+.cta-section > div > p {
+    font-size: 18px;
+    margin-bottom: 30px;
+    opacity: 0.95;
+    font-family: var(--font-body);
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-large {
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.cta-section .btn-primary {
+    background: var(--bg);
+    color: var(--accent);
+}
+
+.cta-section .btn-primary:hover {
+    background: var(--surface);
+}
+
+.cta-section .btn-ghost {
+    border-color: var(--bg);
+    color: var(--bg);
+}
+
+.cta-section .btn-ghost:hover {
+    background: rgba(16, 14, 11, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .how-it-works h2,
+    .advanced-features h2,
+    .benefits h2,
+    .cta-section h2 {
+        font-size: 24px;
+    }
+    
+    .steps,
+    .features-grid,
+    .benefits-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-large {
+        width: 100%;
+    }
+}
+</style>
 
 {% endblock %}

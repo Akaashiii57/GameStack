@@ -9,7 +9,11 @@
     <div 
         class="game-hero"
         {% if lg.game.cover %}
-            style="--game-cover: url('{{ asset('uploads/covers/' ~ lg.game.cover) }}');"
+            {% if lg.game.cover starts with 'http' %}
+                style="--game-cover: url('{{ lg.game.cover }}');"
+            {% else %}
+                style="--game-cover: url('{{ asset('uploads/covers/' ~ lg.game.cover) }}');"
+            {% endif %}
         {% endif %}
     >
         <div class="game-hero-overlay"></div>
@@ -30,11 +34,19 @@
                 <div class="game-left">
                     <div class="game-media-card">
                         {% if lg.game.cover %}
-                            <img 
-                                src="{{ asset('uploads/covers/' ~ lg.game.cover) }}" 
-                                alt="{{ lg.game.title }}"
-                                class="game-main-image"
-                            >
+                            {% if lg.game.cover starts with 'http' %}
+                                <img 
+                                    src="{{ lg.game.cover }}" 
+                                    alt="{{ lg.game.title }}"
+                                    class="game-main-image"
+                                >
+                            {% else %}
+                                <img 
+                                    src="{{ asset('uploads/covers/' ~ lg.game.cover) }}" 
+                                    alt="{{ lg.game.title }}"
+                                    class="game-main-image"
+                                >
+                            {% endif %}
                         {% else %}
                             <div class="game-image-empty">
                                 {{ lg.game.title|slice(0, 1)|upper }}
@@ -44,7 +56,11 @@
 
                     <div class="game-description-card">
                         <h2>Description</h2>
-                        <p>{{ lg.personalReview }}</p>
+                        {% if lg.game.description %}
+                            <p>{{ lg.game.description }}</p>
+                        {% else %}
+                            <p>Aucune description disponible.</p>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -86,14 +102,18 @@
                                 Non noté
                             {% endif %}
                         </div>
+                        {% if lg.startedAt %}
                         <div class="game-info-item">
                             <span>Commencé le :</span>
                             <strong>{{ lg.startedAt|date('d/m/Y') }}</strong>  
                         </div>
+                        {% endif %}
+                        {% if lg.finishedAt %}
                         <div class="game-info-item">
                             <span>Terminé le :</span>
                             <strong>{{ lg.finishedAt|date('d/m/Y') }}</strong>
                         </div>
+                        {% endif %}
                     </div>
 
                     

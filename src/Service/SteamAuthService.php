@@ -154,6 +154,9 @@ class SteamAuthService
                     'appids' => $appId,
                     'l' => 'french', // Langue française
                 ],
+                'headers' => [
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                ],
             ]);
 
             $data = $response->toArray();
@@ -162,8 +165,17 @@ class SteamAuthService
                 return $data[$appId]['data'] ?? null;
             }
             
+            $this->logger?->warning('Steam GetAppDetails failed', [
+                'appId' => $appId,
+                'success' => $data[$appId]['success'] ?? 'unknown'
+            ]);
+            
             return null;
         } catch (\Exception $e) {
+            $this->logger?->error('Steam GetAppDetails error', [
+                'appId' => $appId,
+                'error' => $e->getMessage()
+            ]);
             return null;
         }
     }
@@ -210,6 +222,8 @@ class SteamAuthService
             if (empty($gameName) || $appId === 0) {
                 continue;
             }
+            
+            $this->logger?->info('Processing Steam game', ['name' => $gameName, 'appId' => $appId]);
 
             // Vérifier si le jeu existe déjà dans la bibliothèque de l'utilisateur
             $existingLibraryGame = $this->entityManager->getRepository(LibraryGame::class)
@@ -225,6 +239,7 @@ class SteamAuthService
 
             if ($existingLibraryGame) {
                 // Le jeu existe déjà dans la bibliothèque
+                $this->logger?->info('Steam sync: jeu déjà présent', ['name' => $gameName]);
                 continue;
             }
 
@@ -232,41 +247,67 @@ class SteamAuthService
             $existingGame = $this->entityManager->getRepository(Game::class)
                 ->findOneBy(['title' => $gameName]);
 
+            $isNewGame = false;
+            
             if (!$existingGame) {
                 // Créer un nouveau jeu
                 $existingGame = new Game();
                 $existingGame->setTitle($gameName);
                 $existingGame->setMode('steam');
+                $isNewGame = true;
+            }
+            
+            // TOUJOURS récupérer les détails complets via GetAppDetails (même pour les jeux existants)
+            usleep(500000); // Délai de 500ms entre les appels API
+            $gameDetails = $this->getSteamGameDetails($appId);
+            
+            if ($gameDetails) {
+                $this->logger?->info('Steam details found', [
+                    'appId' => $appId,
+                    'title' => $gameName,
+                    'isNew' => $isNewGame,
+                    'hasDev' => isset($gameDetails['developers']),
+                    'hasPub' => isset($gameDetails['publishers']),
+                    'hasImg' => isset($gameDetails['header_image'])
+                ]);
                 
-                // Récupérer les détails complets via GetAppDetails
-                usleep(200000); // Délai de 200ms entre les appels API
-                $gameDetails = $this->getSteamGameDetails($appId);
+                $existingGame->setDeveloper($gameDetails['developers'][0] ?? null);
+                $existingGame->setPublisher($gameDetails['publishers'][0] ?? null);
+                // Utiliser short_description pour la page détail (plus propre)
+                $description = $gameDetails['short_description'] ?? $gameDetails['detailed_description'] ?? null;
+                if ($description) {
+                    // Décoder les entités HTML (ex: &quot; → ")
+                    $description = html_entity_decode($description, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                }
+                $existingGame->setDescription($description);
                 
-                if ($gameDetails) {
-                    $existingGame->setDeveloper($gameDetails['developers'][0] ?? null);
-                    $existingGame->setPublisher($gameDetails['publishers'][0] ?? null);
-                    $existingGame->setDescription($gameDetails['detailed_description'] ?? $gameDetails['short_description'] ?? null);
-                    
-                    // Déterminer le mode basé sur les catégories
-                    $mode = $this->determineGameMode($gameDetails['categories'] ?? []);
-                    $existingGame->setMode($mode);
-                    
-                    // URL de la jaquette Steam
-                    if (isset($gameDetails['header_image'])) {
-                        $existingGame->setCover($gameDetails['header_image']);
-                    } else {
-                        $coverUrl = "https://cdn.cloudflare.steamstatic.com/steam/apps/{$appId}/library_600x900.jpg";
-                        $existingGame->setCover($coverUrl);
-                    }
+                // Déterminer le mode basé sur les catégories
+                $mode = $this->determineGameMode($gameDetails['categories'] ?? []);
+                $existingGame->setMode($mode);
+                
+                // URL de la jaquette Steam - préférer header_image (plus jolie), sinon URL CDN
+                if (isset($gameDetails['header_image']) && $gameDetails['header_image']) {
+                    $existingGame->setCover($gameDetails['header_image']);
                 } else {
-                    // Fallback si GetAppDetails échoue
+                    $coverUrl = "https://cdn.cloudflare.steamstatic.com/steam/apps/{$appId}/library_600x900.jpg";
+                    $existingGame->setCover($coverUrl);
+                }
+            } else {
+                $this->logger?->info('Steam details NOT found', [
+                    'appId' => $appId,
+                    'title' => $gameName
+                ]);
+                // Fallback si GetAppDetails échoue
+                if ($isNewGame) {
                     $existingGame->setDeveloper(null);
                     $existingGame->setPublisher(null);
                     $existingGame->setDescription(null);
                     $coverUrl = "https://cdn.cloudflare.steamstatic.com/steam/apps/{$appId}/library_600x900.jpg";
                     $existingGame->setCover($coverUrl);
                 }
+            }
 
+            if ($isNewGame) {
                 // Le temps Steam sera stocké uniquement dans LibraryGame::playtime
                 $this->entityManager->persist($existingGame);
             }
@@ -281,13 +322,11 @@ class SteamAuthService
             $playtimeMinutes = $steamGame['playtime_forever'] ?? 0;
             $libraryGame->setPlaytime($playtimeMinutes);
             
-            // Si l'utilisateur a joué récemment, mettre startedAt
-            if (isset($steamGame['rtime_last_played']) && $steamGame['rtime_last_played'] > 0) {
-                $libraryGame->setStartedAt(new \DateTime('@' . $steamGame['rtime_last_played']));
-            }
+            // Ne pas mettre de dates automatiques pour Steam - l'utilisateur les remplira s'il veut
 
             $this->entityManager->persist($libraryGame);
             $importedCount++;
+            $this->logger?->info('Steam sync: jeu importé', ['name' => $gameName]);
         }
 
         // Mettre à jour la date de dernière synchronisation
@@ -303,6 +342,116 @@ class SteamAuthService
     }
 
     /**
+     * Force la synchronisation d'un jeu spécifique (pour debugging)
+     */
+    public function forceSyncGame(GameUser $user, string $steamId, string $gameName): bool
+    {
+        $steamGames = $this->getSteamGames($steamId);
+        
+        foreach ($steamGames as $steamGame) {
+            if (($steamGame['name'] ?? '') === $gameName) {
+                $appId = $steamGame['appid'] ?? 0;
+                
+                if ($appId === 0) {
+                    return false;
+                }
+                
+                // Supprimer le jeu existant s'il y en a un
+                $existingLibraryGame = $this->entityManager->getRepository(LibraryGame::class)
+                    ->createQueryBuilder('lg')
+                    ->join('lg.game', 'g')
+                    ->where('lg.user = :user')
+                    ->andWhere('g.title = :title')
+                    ->setParameter('user', $user)
+                    ->setParameter('title', $gameName)
+                    ->getQuery()
+                    ->setMaxResults(1)
+                    ->getOneOrNullResult();
+                
+                if ($existingLibraryGame) {
+                    $this->entityManager->remove($existingLibraryGame);
+                    $this->entityManager->flush();
+                }
+                
+                // Recréer le jeu avec les nouvelles données
+                $this->createGameFromSteamData($user, $steamGame);
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    private function createGameFromSteamData(GameUser $user, array $steamGame): void
+    {
+        $gameName = $steamGame['name'] ?? '';
+        $appId = $steamGame['appid'] ?? 0;
+        
+        if (empty($gameName) || $appId === 0) {
+            return;
+        }
+        
+        // Vérifier si le jeu existe déjà dans la base de données
+        $existingGame = $this->entityManager->getRepository(Game::class)
+            ->findOneBy(['title' => $gameName]);
+
+        if (!$existingGame) {
+            $existingGame = new Game();
+            $existingGame->setTitle($gameName);
+            $existingGame->setMode('steam');
+        }
+        
+        // Récupérer les détails complets via GetAppDetails
+        usleep(500000); // Délai de 500ms
+        $gameDetails = $this->getSteamGameDetails($appId);
+        
+        if ($gameDetails) {
+            $existingGame->setDeveloper($gameDetails['developers'][0] ?? null);
+            $existingGame->setPublisher($gameDetails['publishers'][0] ?? null);
+            $existingGame->setDescription($gameDetails['detailed_description'] ?? $gameDetails['short_description'] ?? null);
+            
+            // Déterminer le mode basé sur les catégories
+            $mode = $this->determineGameMode($gameDetails['categories'] ?? []);
+            $existingGame->setMode($mode);
+            
+            // URL de la jaquette Steam
+            if (isset($gameDetails['header_image'])) {
+                $existingGame->setCover($gameDetails['header_image']);
+            } else {
+                $coverUrl = "https://cdn.cloudflare.steamstatic.com/steam/apps/{$appId}/library_600x900.jpg";
+                $existingGame->setCover($coverUrl);
+            }
+        } else {
+            // Fallback
+            $existingGame->setDeveloper(null);
+            $existingGame->setPublisher(null);
+            $existingGame->setDescription(null);
+            $coverUrl = "https://cdn.cloudflare.steamstatic.com/steam/apps/{$appId}/library_600x900.jpg";
+            $existingGame->setCover($coverUrl);
+        }
+        
+        $this->entityManager->persist($existingGame);
+        
+        // Créer l'entrée dans la bibliothèque utilisateur
+        $libraryGame = new LibraryGame();
+        $libraryGame->setUser($user);
+        $libraryGame->setGame($existingGame);
+        $libraryGame->setStatus('À faire');
+        
+        // Utiliser le temps de jeu Steam comme temps personnel
+        $playtimeMinutes = $steamGame['playtime_forever'] ?? 0;
+        $libraryGame->setPlaytime($playtimeMinutes);
+        
+        // Si l'utilisateur a joué récemment, mettre startedAt
+        if (isset($steamGame['rtime_last_played']) && $steamGame['rtime_last_played'] > 0) {
+            $libraryGame->setStartedAt(new \DateTime('@' . $steamGame['rtime_last_played']));
+        }
+        
+        $this->entityManager->persist($libraryGame);
+        $this->entityManager->flush();
+    }
+
+    /**
      * Détermine le mode de jeu basé sur les catégories Steam
      */
     private function determineGameMode(array $categories): string
@@ -310,15 +459,17 @@ class SteamAuthService
         $categoryNames = array_column($categories, 'description');
         $categoryNamesLower = array_map('strtolower', $categoryNames);
         
-        // Vérifier les modes
-        $hasSinglePlayer = in_array('single-player', $categoryNamesLower) || 
-                          preg_grep('/single.*player/i', $categoryNames);
-        $hasMultiplayer = in_array('multi-player', $categoryNamesLower) || 
-                         in_array('online multiplayer', $categoryNamesLower) ||
-                         preg_grep('/multi.*player/i', $categoryNames);
-        $hasCoop = in_array('co-op', $categoryNamesLower) || 
-                   in_array('cooperative', $categoryNamesLower) ||
-                   preg_grep('/co.*op/i', $categoryNames);
+        // Vérifier les modes en français (comme retourné par Steam)
+        $hasSinglePlayer = in_array('solo', $categoryNamesLower) || 
+                          in_array('jeu solo', $categoryNamesLower) ||
+                          preg_grep('/solo/i', $categoryNames);
+        $hasMultiplayer = in_array('multijoueur', $categoryNamesLower) || 
+                         in_array('jeu multijoueur', $categoryNamesLower) ||
+                         preg_grep('/multijoueur/i', $categoryNames);
+        $hasCoop = in_array('coop', $categoryNamesLower) || 
+                   in_array('coopératif', $categoryNamesLower) ||
+                   in_array('co-op', $categoryNamesLower) ||
+                   preg_grep('/coop/i', $categoryNames);
         
         if ($hasSinglePlayer && $hasMultiplayer) {
             return 'Solo / Multijoueur';

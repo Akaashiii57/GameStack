@@ -21,12 +21,22 @@
             <p>Vous n'avez pas encore ajouté de jeux !</p>
         </div>
     {% else %}
+        <div class="sort-controls">
+            <span>Trier par titre :</span>
+            <a href="{{ path('app_library', {sort: 'az'}) }}" class="btn-sort {{ current_sort == 'az' ? 'active' : '' }}">A → Z</a>
+            <a href="{{ path('app_library', {sort: 'za'}) }}" class="btn-sort {{ current_sort == 'za' ? 'active' : '' }}">Z → A</a>
+        </div>
+        
         <div class="wrapper-game">
             {% for lg in libraries %}
                 <div class="cardGame">
                     <div class="card-cover">
                         {% if lg.game.cover %}
-                            <img src="{{ asset('uploads/covers/' ~ lg.game.cover) }}" alt="{{ lg.game.title }}">
+                            {% if lg.game.cover starts with 'http' %}
+                                <img src="{{ lg.game.cover }}" alt="{{ lg.game.title }}">
+                            {% else %}
+                                <img src="{{ asset('uploads/covers/' ~ lg.game.cover) }}" alt="{{ lg.game.title }}">
+                            {% endif %}
                         {% else %}
                             Pas de jaquette
                         {% endif %}
@@ -34,7 +44,7 @@
                     <div class="card-content">
                         <span class="card-mode">{{ lg.game.mode }}</span>
                         <h4>{{ lg.game.title }}</h4>
-                        <p class="card-desc">{{ lg.game.description }}</p>
+                        <p class="card-desc">{{ lg.game.description ? lg.game.description : 'Aucune description' }}</p>
                         <div class="card-informations">
                             <p><strong>Développeur :</strong> {{ lg.game.developer }}</p>
                             <p><strong>Éditeur :</strong> {{ lg.game.publisher }}</p>
@@ -56,4 +66,45 @@
         </div>
     {% endif %}
 </section>
+
+<style>
+.sort-controls {
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-sort {
+    padding: 8px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    text-decoration: none;
+    color: var(--text);
+    font-size: 14px;
+    font-family: var(--font-mono);
+    transition: all 0.2s;
+}
+
+.btn-sort:hover {
+    background: var(--surface-2);
+}
+
+.btn-sort.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+}
+
+.card-desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+    max-height: 2.8em;
+}
+</style>
 {% endblock %}

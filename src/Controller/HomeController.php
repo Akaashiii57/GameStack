@@ -34,14 +34,11 @@ final class HomeController extends AbstractController
 
             
             if ($hasSteamAccount) {
-                // Compter les jeux Steam dans la bibliothèque utilisateur
+                // Compter TOUS les jeux de l'utilisateur qui a un compte Steam
                 $steamGamesCount = $this->entityManager->getRepository(LibraryGame::class)
                     ->createQueryBuilder('lg')
-                    ->join('lg.game', 'g')
                     ->where('lg.user = :user')
-                    ->andWhere('g.mode = :mode')
                     ->setParameter('user', $user)
-                    ->setParameter('mode', 'steam')
                     ->select('COUNT(lg.id)')
                     ->getQuery()
                     ->getSingleScalarResult();
