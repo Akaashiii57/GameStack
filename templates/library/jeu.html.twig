@@ -44,7 +44,7 @@
 
                     <div class="game-description-card">
                         <h2>Description</h2>
-                        <p>{{ lg.game.description }}</p>
+                        <p>{{ lg.personalReview }}</p>
                     </div>
                 </div>
 
@@ -66,22 +66,26 @@
 
                         <div class="game-info-item">
                             <span>Ma note</span>
-                            <strong>
-                                {% if lg.personalRating  is not null %}
-                                    {{ lg.personalRating  }}/10
-                                {% else %}
-                                    Non noté
-                                {% endif %}
-                            </strong>
+                            {% if lg.personalRating  is not null %}
+                                <div class="rating-box">
+                                    <span>★</span>
+                                    <strong>{{ lg.personalRating  }}/10</strong>
+                                </div>
+                            {% else %}
+                                Non noté
+                            {% endif %}
+                        </div>
+                        <div class="game-info-item">
+                            <span>Commencé le :</span>
+                            <strong>{{ lg.startedAt|date('d/m/Y') }}</strong>  
+                        </div>
+                        <div class="game-info-item">
+                            <span>Terminé le :</span>
+                            <strong>{{ lg.finishedAt|date('d/m/Y') }}</strong>
                         </div>
                     </div>
 
-                    {% if lg.personalRating  is not null %}
-                        <div class="rating-box">
-                            <span>★</span>
-                            <strong>{{ lg.personalRating  }}/10</strong>
-                        </div>
-                    {% endif %}
+                    
 
                     <a href="{{ path('app_library') }}" class="library-button">
                         Retour à ma bibliothèque

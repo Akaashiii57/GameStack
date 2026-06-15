@@ -23,7 +23,7 @@ class LibraryGame
     private ?Game $game = null;
 
     #[ORM\Column(length: 50)]
-    private ?string $status = 'Souhaite';
+    private ?string $status = 'À faire';
 
     #[ORM\Column(type: Types::SMALLINT, nullable: true)]
     private ?int $personal_rating = null;
