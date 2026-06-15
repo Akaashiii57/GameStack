@@ -27,12 +27,10 @@ final class LibraryController extends AbstractController
     #[Route('/library', name: 'app_library')]
     public function index(): Response
     {
-        $user = $this->getUser();
         $libraries = $this->getUser()->getLibraryGames();
 
         return $this->render('library/index.html.twig', [
             'libraries' => $libraries,
-            'user' => $user,
         ]);
     }
 

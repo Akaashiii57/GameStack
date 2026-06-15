@@ -7,8 +7,9 @@ use App\Entity\SteamAccount;
 use App\Entity\Game;
 use App\Entity\LibraryGame;
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class SteamAuthService
@@ -19,9 +20,9 @@ class SteamAuthService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private HttpClientInterface $httpClient,
-        private string $steamApiKey,
-        private ?LoggerInterface $logger = null
+        private string $steamApiKey
     ) {
+        $this->httpClient = HttpClient::create();
     }
 
     /**
@@ -29,19 +30,11 @@ class SteamAuthService
      */
     public function generateLoginUrl(string $returnUrl): string
     {
-        // openid.realm = racine du site (ex: http://localhost:8000/)
-        $parsedUrl = parse_url($returnUrl);
-        $realm = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
-        if (isset($parsedUrl['port'])) {
-            $realm .= ':' . $parsedUrl['port'];
-        }
-        $realm .= '/';
-
         $params = [
             'openid.ns'         => 'http://specs.openid.net/auth/2.0',
             'openid.mode'       => 'checkid_setup',
             'openid.return_to'  => $returnUrl,
-            'openid.realm'      => $realm,
+            'openid.realm'      => $returnUrl,
             'openid.identity'   => 'http://specs.openid.net/auth/2.0/identifier_select',
             'openid.claimed_id' => 'http://specs.openid.net/auth/2.0/identifier_select',
         ];
@@ -54,47 +47,20 @@ class SteamAuthService
      */
     public function validateOpenIdResponse(Request $request): ?string
     {
-        // IMPORTANT : ne pas utiliser $request->query->all() car Symfony/PHP
-        // convertit les points (.) des noms de paramètres en underscores (_),
-        // ce qui casse les clés "openid.*" attendues par Steam.
-        // On parse donc la query string brute pour préserver les noms exacts.
-        $params = [];
-        foreach (explode('&', $request->getQueryString() ?? '') as $pair) {
-            if ($pair === '') {
-                continue;
-            }
-            $parts = explode('=', $pair, 2);
-            $key = urldecode($parts[0]);
-            $value = isset($parts[1]) ? urldecode($parts[1]) : '';
-            $params[$key] = $value;
-        }
-
+        $params = $request->query->all();
         $params['openid.mode'] = 'check_authentication';
 
-        try {
-            $response = $this->httpClient->request('POST', self::STEAM_OPENID_URL, [
-                'body' => $params,
-                'headers' => [
-                    'Content-Type' => 'application/x-www-form-urlencoded',
-                ],
-            ]);
-
-            $content = $response->getContent(false);
-        } catch (\Throwable $e) {
-            $this->logger?->error('Steam OpenID: erreur HTTP', ['error' => $e->getMessage()]);
-            return null;
-        }
-
-        $this->logger?->info('Steam OpenID: réponse validation', [
-            'content' => $content,
-            'claimed_id' => $params['openid.claimed_id'] ?? null,
+        $response = $this->httpClient->request('POST', self::STEAM_OPENID_URL, [
+            'body' => $params,
         ]);
+
+        $content = $response->getContent();
 
         if (str_contains($content, 'is_valid:true')) {
             // Extraire le SteamID de l'URL claimed_id
-            $claimedId = $params['openid.claimed_id'] ?? '';
+            $claimedId = $params['openid.claimed_id'];
             preg_match('/\/(\d+)$/', $claimedId, $matches);
-
+            
             return $matches[1] ?? null;
         }
 
@@ -136,30 +102,9 @@ class SteamAuthService
                 ],
             ]);
 
-            // false = ne pas lever d'exception sur un statut HTTP != 2xx,
-            // pour qu'on puisse logger le statut et le corps en cas d'erreur.
-            $statusCode = $response->getStatusCode();
-            $data = $response->toArray(false);
-
-            $games = $data['response']['games'] ?? [];
-
-            $this->logger?->info('Steam API GetOwnedGames: réponse', [
-                'steamId' => $steamId,
-                'httpStatus' => $statusCode,
-                // game_count = nombre de jeux que Steam dit que l'utilisateur possède
-                'gameCountAnnonce' => $data['response']['game_count'] ?? null,
-                // nombre de jeux réellement renvoyés dans la réponse
-                'gamesRecus' => count($games),
-                // si false : profil Steam privé ou clé API invalide
-                'responsePresente' => isset($data['response']),
-            ]);
-
-            return $games;
-        } catch (\Throwable $e) {
-            $this->logger?->error('Steam API GetOwnedGames: échec de l\'appel', [
-                'steamId' => $steamId,
-                'error' => $e->getMessage(),
-            ]);
+            $data = $response->toArray();
+            return $data['response']['games'] ?? [];
+        } catch (\Exception $e) {
             return [];
         }
     }
@@ -167,7 +112,7 @@ class SteamAuthService
     /**
      * Lie un compte Steam à un utilisateur
      */
-    public function linkSteamAccount(GameUser $user, string $steamId, ?array $profileData = null): SteamAccount
+    public function linkSteamAccount(GameUser $user, string $steamId, array $profileData = null): SteamAccount
     {
         $steamAccount = $user->getSteamAccount();
         
@@ -197,11 +142,6 @@ class SteamAuthService
     public function syncSteamGames(GameUser $user, string $steamId): int
     {
         $steamGames = $this->getSteamGames($steamId);
-        $this->logger?->info('Steam sync: jeux retournés par l\'API', [
-            'steamId' => $steamId,
-            'count' => is_array($steamGames) ? count($steamGames) : 0,
-            'names' => array_map(fn($g) => $g['name'] ?? '???', $steamGames ?? []),
-        ]);
         $importedCount = 0;
 
         foreach ($steamGames as $steamGame) {
@@ -209,10 +149,6 @@ class SteamAuthService
             $appId = $steamGame['appid'] ?? 0;
 
             if (empty($gameName) || $appId === 0) {
-                $this->logger?->info('Steam sync: jeu ignoré (nom/appid manquant)', [
-                    'appid' => $appId,
-                    'name' => $gameName,
-                ]);
                 continue;
             }
 
@@ -225,15 +161,12 @@ class SteamAuthService
                 ->setParameter('user', $user)
                 ->setParameter('title', $gameName)
                 ->getQuery()
-                ->setMaxResults(1)
                 ->getOneOrNullResult();
 
             if ($existingLibraryGame) {
                 // Le jeu existe déjà dans la bibliothèque
                 continue;
             }
-
-            $this->logger?->info('Steam sync: nouveau jeu à importer', ['name' => $gameName, 'appid' => $appId]);
 
             // Vérifier si le jeu existe déjà dans la base de données
             $existingGame = $this->entityManager->getRepository(Game::class)
@@ -268,17 +201,7 @@ class SteamAuthService
             $importedCount++;
         }
 
-        // Mettre à jour la date de dernière synchronisation
-        $steamAccount = $user->getSteamAccount();
-        if ($steamAccount) {
-            $steamAccount->setLastSyncAt(new \DateTime());
-            $this->entityManager->persist($steamAccount);
-        }
-
         $this->entityManager->flush();
-
-        $this->logger?->info('Steam sync: terminé', ['imported' => $importedCount]);
-
         return $importedCount;
     }
 }
