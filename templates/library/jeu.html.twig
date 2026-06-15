@@ -44,7 +44,7 @@
 
                     <div class="game-description-card">
                         <h2>Description</h2>
-                        <p>{{ lg.game.description }}</p>
+                        <p>{{ lg.personalReview }}</p>
                     </div>
                 </div>
 
@@ -74,6 +74,14 @@
                             {% else %}
                                 Non noté
                             {% endif %}
+                        </div>
+                        <div class="game-info-item">
+                            <span>Commencé le :</span>
+                            <strong>{{ lg.startedAt|date('d/m/Y') }}</strong>  
+                        </div>
+                        <div class="game-info-item">
+                            <span>Terminé le :</span>
+                            <strong>{{ lg.finishedAt|date('d/m/Y') }}</strong>
                         </div>
                     </div>
 

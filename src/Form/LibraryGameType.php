@@ -11,6 +11,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 
 class LibraryGameType extends AbstractType
 {
@@ -40,11 +41,13 @@ class LibraryGameType extends AbstractType
             ->add('playtime', null, [
                 'label' => 'Votre temps de jeu',
             ])
-            ->add('startedAt', null, [
+            ->add('startedAt', DateType::class, [
                 'label' => 'Commencé à',
+                'required' => false,
             ])
-            ->add('finishedAt', null, [
+            ->add('finishedAt', DateType::class, [
                 'label' => 'Finit à ',
+                'required' => false,
             ])
             ->add('isFavorite', CheckboxType::class, [
                 'label' => 'Est-ce votre jeu favori ?',
