@@ -4,6 +4,11 @@
 
 {% block body %}
 <section class="page-shell">
+<div class="return-library">
+    <a href="{{ path('app_library_jeu', { id: lg.id}) }}" class="back-link">
+        ← Retour à ma bibliothèque
+    </a>
+</div>
     <div class="form-panel">
         <div class="form-panel-head">
             <p class="page-eyebrow">Mes infos perso</p>
