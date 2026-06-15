@@ -14,6 +14,7 @@ use App\Form\LibraryGameType;
 use App\Entity\LibraryGame;
 use App\Entity\Game;
 use App\Form\GameType;
+use App\Entity\GameUser;
 
 #[IsGranted('ROLE_USER')]
 final class LibraryController extends AbstractController
@@ -27,8 +28,9 @@ final class LibraryController extends AbstractController
     #[Route('/library', name: 'app_library')]
     public function index(): Response
     {
+        /** @var \App\Entity\GameUser $user */
         $user = $this->getUser();
-        $libraries = $this->getUser()->getLibraryGames();
+        $libraries = $user->getLibraryGames();
 
         return $this->render('library/index.html.twig', [
             'libraries' => $libraries,
