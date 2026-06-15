@@ -66,7 +66,13 @@
 
                         <div class="game-info-item">
                             <span>Temps de jeu</span>
-                            <strong>{{ lg.playtime }} h</strong>
+                            <strong>
+                                {% if lg.personalRating  is not null %}
+                                    {{ lg.playtime }} h
+                                {% else %}
+                                    Pas d'heure de jeu enregistrer
+                                {% endif %}
+                            </strong>
                         </div>
 
                         <div class="game-info-item">
