@@ -7,6 +7,7 @@ use App\Entity\SteamAccount;
 use App\Security\SteamAuthenticator;
 use App\Service\SteamAuthService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,12 +38,15 @@ final class SteamAuthController extends AbstractController
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         UserAuthenticatorInterface $userAuthenticator,
-        SteamAuthenticator $steamAuthenticator
+        SteamAuthenticator $steamAuthenticator,
+        LoggerInterface $logger
     ): Response {
         // Valider la réponse OpenID de Steam
         $steamId = $steamAuthService->validateOpenIdResponse($request);
+        $logger->info('Steam callback: validation OpenID', ['steamId' => $steamId]);
 
         if (!$steamId) {
+            $logger->warning('Steam callback: validation OpenID échouée');
             $this->addFlash('error', 'Échec de l\'authentification Steam.');
             return $this->redirectToRoute('app_login');
         }
@@ -106,7 +110,14 @@ final class SteamAuthController extends AbstractController
         }
 
         // Synchroniser la bibliothèque Steam (première connexion ou synchro silencieuse)
-        $importedCount = $steamAuthService->syncSteamGames($user, $steamId);
+        try {
+            $importedCount = $steamAuthService->syncSteamGames($user, $steamId);
+            $logger->info('Steam callback: synchro jeux', ['imported' => $importedCount]);
+        } catch (\Throwable $e) {
+            $logger->error('Steam callback: erreur synchro jeux', ['error' => $e->getMessage()]);
+            $importedCount = 0;
+        }
+
         if ($importedCount > 0) {
             $this->addFlash('success', sprintf('Connecté via Steam ! %d jeux importés depuis votre bibliothèque.', $importedCount));
         } else {
@@ -114,8 +125,11 @@ final class SteamAuthController extends AbstractController
         }
 
         // Connecter l'utilisateur via Symfony Security
-        return $userAuthenticator->authenticateUser($user, $steamAuthenticator, $request)
-            ?? $this->redirectToRoute('app_home');
+        $logger->info('Steam callback: tentative login', ['userId' => $user->getId(), 'email' => $user->getUserIdentifier()]);
+        $response = $userAuthenticator->authenticateUser($user, $steamAuthenticator, $request);
+        $logger->info('Steam callback: login terminé', ['hasResponse' => $response !== null]);
+
+        return $response ?? $this->redirectToRoute('app_home');
     }
 
     #[Route('/steam/sync', name: 'app_steam_sync')]
