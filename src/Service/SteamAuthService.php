@@ -136,9 +136,30 @@ class SteamAuthService
                 ],
             ]);
 
-            $data = $response->toArray();
-            return $data['response']['games'] ?? [];
-        } catch (\Exception $e) {
+            // false = ne pas lever d'exception sur un statut HTTP != 2xx,
+            // pour qu'on puisse logger le statut et le corps en cas d'erreur.
+            $statusCode = $response->getStatusCode();
+            $data = $response->toArray(false);
+
+            $games = $data['response']['games'] ?? [];
+
+            $this->logger?->info('Steam API GetOwnedGames: réponse', [
+                'steamId' => $steamId,
+                'httpStatus' => $statusCode,
+                // game_count = nombre de jeux que Steam dit que l'utilisateur possède
+                'gameCountAnnonce' => $data['response']['game_count'] ?? null,
+                // nombre de jeux réellement renvoyés dans la réponse
+                'gamesRecus' => count($games),
+                // si false : profil Steam privé ou clé API invalide
+                'responsePresente' => isset($data['response']),
+            ]);
+
+            return $games;
+        } catch (\Throwable $e) {
+            $this->logger?->error('Steam API GetOwnedGames: échec de l\'appel', [
+                'steamId' => $steamId,
+                'error' => $e->getMessage(),
+            ]);
             return [];
         }
     }

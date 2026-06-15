@@ -133,21 +133,46 @@ final class SteamAuthController extends AbstractController
     }
 
     #[Route('/steam/sync', name: 'app_steam_sync')]
-    public function sync(SteamAuthService $steamAuthService): Response
+    public function sync(SteamAuthService $steamAuthService, LoggerInterface $logger): Response
     {
         $user = $this->getUser();
 
         if (!$user) {
+            $logger->warning('Steam resync: utilisateur non connecté');
             return $this->redirectToRoute('app_login');
         }
 
-        if (!$user->getSteamAccount()) {
+        $steamAccount = $user->getSteamAccount();
+        if (!$steamAccount) {
+            $logger->warning('Steam resync: aucun compte Steam lié', ['userId' => $user->getId()]);
             $this->addFlash('error', 'Aucun compte Steam lié.');
             return $this->redirectToRoute('app_home');
         }
 
-        $steamId = $user->getSteamAccount()->getSteamId();
-        $importedCount = $steamAuthService->syncSteamGames($user, $steamId);
+        $steamId = $steamAccount->getSteamId();
+        $logger->info('Steam resync: démarrage', [
+            'userId' => $user->getId(),
+            'steamId' => $steamId,
+            'lastSyncAt' => $steamAccount->getLastSyncAt()?->format('Y-m-d H:i:s'),
+        ]);
+
+        try {
+            $importedCount = $steamAuthService->syncSteamGames($user, $steamId);
+        } catch (\Throwable $e) {
+            $logger->error('Steam resync: exception pendant la synchro', [
+                'userId' => $user->getId(),
+                'steamId' => $steamId,
+                'error' => $e->getMessage(),
+            ]);
+            $this->addFlash('error', 'Erreur pendant la synchronisation Steam : ' . $e->getMessage());
+            return $this->redirectToRoute('app_home');
+        }
+
+        $logger->info('Steam resync: terminé', [
+            'userId' => $user->getId(),
+            'steamId' => $steamId,
+            'importedCount' => $importedCount,
+        ]);
 
         $this->addFlash('success', sprintf('%d jeux importés depuis Steam.', $importedCount));
 
