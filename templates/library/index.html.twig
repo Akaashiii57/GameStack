@@ -7,7 +7,7 @@
     <div class="library-head">
         <div>
             <p class="page-eyebrow">Ma collection</p>
-            <h1 class="page-title">Bibliothèque <em>GameStack</em></h1>
+            <h1 class="page-title">Bienvenue {{ user.username }} dans ta bibliothèque <em>GameStack</em></h1>
         </div>
         <a href="{{ path('app_library_search') }}" class="btn btn-primary">+ Ajouter un jeu</a>
     </div>
@@ -41,9 +41,7 @@
                             {% if lg.game.releaseDate %}
                                 <p><strong>Date de sortie :</strong> {{ lg.game.releaseDate|date('d/m/Y') }}</p>
                             {% endif %}
-                            {% if lg.game.estimatedPlaytime %}
-                                <p><strong>Temps de jeu estimé :</strong> {{ lg.game.estimatedPlaytime }} h</p>
-                            {% endif %}
+
                         </div>
                         <div class="card-actions">
                             <a href="{{ path('app_library_jeu', { id: lg.id }) }}" class="card-cta">Voir le jeu</a>

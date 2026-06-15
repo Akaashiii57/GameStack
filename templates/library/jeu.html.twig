@@ -44,7 +44,7 @@
 
                     <div class="game-description-card">
                         <h2>Description</h2>
-                        <p>{{ lg.game.description }}</p>
+                        <p>{{ lg.personalReview }}</p>
                     </div>
                 </div>
 
@@ -65,6 +65,17 @@
                         </div>
 
                         <div class="game-info-item">
+                            <span>Temps de jeu</span>
+                            <strong>
+                                {% if lg.playtime %}
+                                    {{ (lg.playtime / 60)|round(1) }} h
+                                {% else %}
+                                    Pas d'heure de jeu enregistré
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="game-info-item">
                             <span>Ma note</span>
                             {% if lg.personalRating  is not null %}
                                 <div class="rating-box">
@@ -74,6 +85,14 @@
                             {% else %}
                                 Non noté
                             {% endif %}
+                        </div>
+                        <div class="game-info-item">
+                            <span>Commencé le :</span>
+                            <strong>{{ lg.startedAt|date('d/m/Y') }}</strong>  
+                        </div>
+                        <div class="game-info-item">
+                            <span>Terminé le :</span>
+                            <strong>{{ lg.finishedAt|date('d/m/Y') }}</strong>
                         </div>
                     </div>
 
