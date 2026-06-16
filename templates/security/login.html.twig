@@ -28,23 +28,32 @@
                             </div>
                         {% endif %}
 
-                        <form method="post">
-                            <div class="mb-3">
-                                <label for="username" class="form-label">Email</label>
-                                <input type="email" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="email" required autofocus>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Mot de passe</label>
-                                <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
-                            </div>
+                         <form method="post">
+                             <div class="field">
+                                 <label for="username">Email</label>
+                                 <input type="email" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="email" required autofocus>
+                             </div>
+                             
+                             <div class="field">
+                                 <label for="password">Mot de passe</label>
+                                 <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
+                             </div>
 
-                            <div class="d-grid">
-                                <button class="btn btn-primary" type="submit">
-                                    Se connecter
-                                </button>
-                            </div>
-                        </form>
+                             <div class="d-grid">
+                                 <button class="btn btn-primary" type="submit">
+                                     Se connecter
+                                 </button>
+                             </div>
+                         </form>
+                         
+                         <style>
+                         .form-control {
+                             color: var(--text) !important;
+                         }
+                         .form-control:focus {
+                             color: var(--text) !important;
+                         }
+                         </style>
                         
                         <div class="text-center mt-4">
                             <div class="border-top pt-3">
