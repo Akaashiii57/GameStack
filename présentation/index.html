@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameStack — Soutenance · Projet de spécialité</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,600&family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   GAMESTACK — Soutenance · Deck
+   Reprend la direction artistique du projet :
+   éditorial arcade · dark warm · accent ambré CRT
+   ============================================================ */
+:root{
+  --bg:#100E0B; --surface:#1A1714; --surface-2:#242019; --surface-3:#2E2920;
+  --border:#3A3328; --border-strong:#5A5040;
+  --text:#F2EBDC; --text-2:#B8AE96; --text-3:#7A6F5B;
+  --accent:#E8783C; --accent-2:#FBC55E; --accent-soft:rgba(232,120,60,.12);
+  --wishlist:#B89BD9; --backlog:#7B95C7; --playing:#E8783C; --completed:#88B596; --dropped:#A88282;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'Manrope',system-ui,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  --r-sm:4px; --r-md:8px; --r-lg:14px;
+  --shadow-lg:0 12px 32px rgba(0,0,0,.5);
+  --grain:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.08'/></svg>");
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:var(--font-body); background:var(--bg); color:var(--text);
+  overflow:hidden; -webkit-font-smoothing:antialiased;
+  background-image:var(--grain); background-attachment:fixed;
+}
+
+/* ---------- Deck shell ---------- */
+.deck{position:fixed;inset:0;}
+.slide{
+  position:absolute; inset:0;
+  display:none; flex-direction:column; justify-content:center;
+  padding:clamp(40px,6vh,84px) clamp(48px,8vw,140px);
+  opacity:0; transition:opacity .45s ease;
+}
+.slide.active{display:flex; opacity:1; animation:slideIn .5s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+.slide-inner{max-width:1180px;width:100%;margin:0 auto;}
+
+/* ---------- Typo helpers ---------- */
+.eyebrow{
+  font-family:var(--font-mono); font-size:.8rem; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--accent); margin-bottom:22px;
+  display:flex; align-items:center; gap:10px;
+}
+.eyebrow::before{content:'◆'; font-size:.7em;}
+h1{font-family:var(--font-display); font-weight:600; line-height:1.02; letter-spacing:-.03em;}
+h2{font-family:var(--font-display); font-weight:600; line-height:1.05; letter-spacing:-.03em;
+   font-size:clamp(2rem,4.4vw,3.4rem); margin-bottom:14px;}
+h2 em,h1 em{font-style:italic; font-weight:400; color:var(--accent);}
+.lead{font-size:clamp(1.05rem,1.5vw,1.35rem); color:var(--text-2); max-width:62ch; line-height:1.55;}
+.mono{font-family:var(--font-mono); text-transform:uppercase; letter-spacing:.04em;}
+strong{color:var(--text);}
+
+/* ============================================================
+   Slide 1 — Cover
+   ============================================================ */
+.cover{align-items:flex-start; text-align:left;}
+.cover .logo-big{
+  font-family:var(--font-display); font-style:italic; font-weight:800;
+  font-size:clamp(3.6rem,11vw,8rem); letter-spacing:-.045em; line-height:.9;
+  margin:6px 0 26px;
+}
+.cover .logo-big::after{content:'_'; color:var(--accent); animation:blink 1.2s steps(2) infinite;}
+@keyframes blink{50%{opacity:0;}}
+.cover .lead{font-size:clamp(1.2rem,2vw,1.6rem); color:var(--text-2); max-width:30ch;}
+.cover-meta{display:flex; flex-wrap:wrap; gap:14px; margin-top:42px;}
+.chip{
+  font-family:var(--font-mono); font-size:.74rem; letter-spacing:.08em; text-transform:uppercase;
+  background:var(--surface); border:1px solid var(--border); color:var(--text-2);
+  padding:9px 16px; border-radius:999px;
+}
+.chip.solid{background:var(--accent-soft); border-color:rgba(232,120,60,.35); color:var(--accent);}
+.cover-authors{margin-top:40px; font-family:var(--font-mono); font-size:.85rem; color:var(--text-3); letter-spacing:.05em;}
+.cover-authors strong{color:var(--text);}
+
+/* ============================================================
+   Grids & cards (réutilisés)
+   ============================================================ */
+.grid{display:grid; gap:18px; margin-top:34px;}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+.card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:26px 24px; transition:border-color .2s, transform .2s;
+}
+.card:hover{border-color:var(--border-strong); transform:translateY(-3px);}
+.card .num{
+  font-family:var(--font-mono); font-size:.74rem; color:var(--accent);
+  letter-spacing:.1em; margin-bottom:14px;
+}
+.card h3{font-family:var(--font-display); font-weight:600; font-size:1.3rem; letter-spacing:-.02em; margin-bottom:10px;}
+.card p{color:var(--text-2); font-size:.95rem; line-height:1.5;}
+.card .ico{font-size:1.6rem; margin-bottom:14px; display:block;}
+
+/* ---------- Liste cochée ---------- */
+.checklist{list-style:none; margin-top:30px; display:flex; flex-direction:column; gap:14px;}
+.checklist li{
+  display:flex; gap:16px; align-items:flex-start;
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md);
+  padding:16px 20px;
+}
+.checklist .tag{
+  font-family:var(--font-mono); font-size:.72rem; font-weight:700; letter-spacing:.06em;
+  color:var(--accent); background:var(--accent-soft); border-radius:var(--r-sm);
+  padding:4px 9px; flex-shrink:0; min-width:38px; text-align:center;
+}
+.checklist .body{font-size:1rem; color:var(--text-2); line-height:1.45;}
+.checklist .body strong{color:var(--text);}
+.checklist .done{margin-left:auto; color:var(--completed); font-family:var(--font-mono); font-size:.7rem; letter-spacing:.08em; flex-shrink:0;}
+.checklist .soon{margin-left:auto; color:var(--text-3); font-family:var(--font-mono); font-size:.7rem; letter-spacing:.08em; flex-shrink:0;}
+
+/* ---------- Bullets ---------- */
+.bullets{list-style:none; margin-top:28px; display:flex; flex-direction:column; gap:18px; max-width:74ch;}
+.bullets li{position:relative; padding-left:34px; font-size:1.12rem; color:var(--text-2); line-height:1.5;}
+.bullets li::before{
+  content:''; position:absolute; left:0; top:.55em; width:12px; height:12px;
+  background:var(--accent); border-radius:3px; transform:rotate(45deg);
+}
+.bullets li strong{color:var(--text);}
+.punch{
+  margin-top:36px; font-family:var(--font-display); font-style:italic; font-weight:400;
+  font-size:clamp(1.3rem,2.4vw,2rem); color:var(--accent); line-height:1.25; max-width:24ch;
+}
+
+/* ============================================================
+   Stack technique
+   ============================================================ */
+.stack-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin-top:32px;}
+.stack-row{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:22px 24px;
+}
+.stack-row h4{
+  font-family:var(--font-mono); font-size:.72rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--text-3); margin-bottom:14px;
+}
+.pillset{display:flex; flex-wrap:wrap; gap:8px;}
+.pill{
+  font-family:var(--font-mono); font-size:.82rem; letter-spacing:.02em;
+  background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r-sm);
+  padding:7px 13px; color:var(--text);
+}
+.pill.hot{border-color:rgba(232,120,60,.4); color:var(--accent); background:var(--accent-soft);}
+
+/* ============================================================
+   Schéma de données (UML-like)
+   ============================================================ */
+.erd{display:flex; align-items:stretch; justify-content:center; gap:0; margin-top:30px; flex-wrap:wrap;}
+.entity{
+  background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-lg);
+  min-width:210px; overflow:hidden; box-shadow:var(--shadow-lg);
+}
+.entity.pivot{border-color:var(--accent);}
+.entity h5{
+  font-family:var(--font-mono); font-size:.82rem; letter-spacing:.08em; text-transform:uppercase;
+  background:var(--surface-2); padding:12px 16px; border-bottom:1px solid var(--border); color:var(--accent);
+}
+.entity.pivot h5{background:var(--accent-soft);}
+.entity ul{list-style:none; padding:12px 16px; display:flex; flex-direction:column; gap:7px;}
+.entity li{font-family:var(--font-mono); font-size:.74rem; color:var(--text-2); display:flex; justify-content:space-between; gap:14px;}
+.entity li .k{color:var(--text);}
+.entity li .t{color:var(--text-3);}
+.rel{display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 6px; min-width:96px;}
+.rel .line{height:1px; width:100%; background:var(--border-strong);}
+.rel .label{font-family:var(--font-mono); font-size:.66rem; color:var(--accent); letter-spacing:.06em; padding:6px 0; text-align:center;}
+.erd-note{margin-top:24px; color:var(--text-2); font-size:1rem; max-width:80ch; line-height:1.5;}
+.erd-note strong{color:var(--accent);}
+
+/* ---------- Diagramme image (modèle de données depuis Miro) ---------- */
+.slide-inner.wide{max-width:1320px;}
+.diagram-frame{
+  margin-top:18px; background:#fff; border:1px solid var(--border-strong);
+  border-radius:var(--r-lg); padding:14px; box-shadow:var(--shadow-lg);
+  display:flex; align-items:center; justify-content:center; position:relative;
+}
+.diagram-frame img{max-width:100%; max-height:58vh; object-fit:contain; display:block; border-radius:6px; cursor:zoom-in;}
+.diagram-frame img:hover{outline:2px solid var(--accent); outline-offset:3px;}
+.zoom-hint{position:absolute; bottom:8px; right:12px; font-family:var(--font-mono); font-size:.66rem; letter-spacing:.06em; color:var(--text-3); background:rgba(255,255,255,.85); padding:3px 8px; border-radius:999px; pointer-events:none;}
+.diagram-missing{
+  display:flex; align-items:center; justify-content:center; gap:16px; text-align:center;
+  min-height:42vh; width:100%; background:var(--surface); border:1px dashed var(--border-strong);
+  border-radius:var(--r-md); color:var(--text-2);
+}
+.diagram-missing strong{display:block; font-family:var(--font-display); font-size:1.25rem; color:var(--text); margin-bottom:8px;}
+.diagram-missing span{font-family:var(--font-mono); font-size:.82rem; color:var(--text-3); letter-spacing:.02em;}
+.diagram-missing code{color:var(--accent); background:var(--accent-soft); padding:2px 8px; border-radius:4px;}
+.diagram-cap{margin-top:16px; color:var(--text-2); font-size:.98rem; line-height:1.5; max-width:84ch;}
+.diagram-cap strong{color:var(--accent);}
+
+/* ---------- Lightbox (image plein écran) ---------- */
+.lightbox{
+  position:fixed; inset:0; z-index:95; background:rgba(8,7,5,.96);
+  display:none; align-items:center; justify-content:center; padding:3vh 3vw; cursor:zoom-out;
+}
+.lightbox.show{display:flex; animation:slideIn .25s ease;}
+.lightbox img{max-width:96vw; max-height:94vh; object-fit:contain; border-radius:8px; background:#fff; box-shadow:var(--shadow-lg);}
+.lightbox-close{
+  position:absolute; top:18px; right:22px; width:42px; height:42px; border-radius:50%;
+  border:1px solid var(--border-strong); background:var(--surface); color:var(--text);
+  font-size:1.2rem; cursor:pointer; display:grid; place-items:center;
+}
+.lightbox-close:hover{border-color:var(--accent); color:var(--accent);}
+
+/* ============================================================
+   Flow / parcours
+   ============================================================ */
+.flow{display:flex; align-items:stretch; gap:0; margin-top:38px; flex-wrap:wrap;}
+.flow-step{
+  flex:1; min-width:150px; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:22px 18px; position:relative;
+}
+.flow-step .n{
+  width:38px; height:38px; line-height:38px; text-align:center; border-radius:50%;
+  background:var(--accent); color:var(--bg); font-family:var(--font-display); font-weight:600;
+  font-size:1.15rem; margin-bottom:14px;
+}
+.flow-step h4{font-family:var(--font-display); font-size:1.05rem; font-weight:600; margin-bottom:8px; letter-spacing:-.01em;}
+.flow-step p{font-size:.84rem; color:var(--text-2); line-height:1.45;}
+.flow-arrow{display:flex; align-items:center; color:var(--accent); font-size:1.6rem; padding:0 8px;}
+
+/* ============================================================
+   Code block
+   ============================================================ */
+.code{
+  margin-top:26px; background:#0C0A08; border:1px solid var(--border); border-radius:var(--r-lg);
+  overflow:hidden;
+}
+.code .bar{
+  display:flex; align-items:center; gap:8px; padding:11px 16px; border-bottom:1px solid var(--border);
+  background:var(--surface);
+}
+.code .bar i{width:11px; height:11px; border-radius:50%; display:inline-block;}
+.code .bar .fn{font-family:var(--font-mono); font-size:.74rem; color:var(--text-3); margin-left:8px;}
+.code pre{padding:20px 22px; overflow:auto; font-family:var(--font-mono); font-size:.86rem; line-height:1.65;}
+.code code{color:var(--text-2); white-space:pre;}
+.code .cm{color:var(--text-3); font-style:italic;}
+.code .kw{color:var(--accent);}
+.code .st{color:var(--accent-2);}
+.code .fnname{color:#9ec8ff;}
+.callout{
+  margin-top:22px; display:flex; gap:14px; align-items:flex-start;
+  background:var(--accent-soft); border:1px solid rgba(232,120,60,.35); border-radius:var(--r-md);
+  padding:16px 20px;
+}
+.callout .ico{font-size:1.4rem;}
+.callout p{color:var(--text); font-size:.98rem; line-height:1.5;}
+.callout strong{color:var(--accent);}
+
+/* ============================================================
+   Direction artistique
+   ============================================================ */
+.swatches{display:flex; gap:14px; margin-top:30px; flex-wrap:wrap;}
+.swatch{flex:1; min-width:120px; border-radius:var(--r-lg); overflow:hidden; border:1px solid var(--border);}
+.swatch .chip-color{height:88px;}
+.swatch .meta{padding:12px 14px; background:var(--surface);}
+.swatch .meta b{display:block; font-size:.9rem;}
+.swatch .meta span{font-family:var(--font-mono); font-size:.7rem; color:var(--text-3);}
+.type-row{display:flex; gap:16px; margin-top:24px; flex-wrap:wrap;}
+.type-card{flex:1; min-width:180px; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:22px;}
+.type-card .sample{font-size:2.2rem; line-height:1; margin-bottom:12px;}
+.type-card .label{font-family:var(--font-mono); font-size:.7rem; color:var(--text-3); letter-spacing:.08em; text-transform:uppercase;}
+
+/* ---------- Stat row ---------- */
+.stats{display:flex; gap:0; margin-top:34px; border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden;}
+.stat{flex:1; padding:26px 22px; text-align:center; background:var(--surface); border-right:1px solid var(--border);}
+.stat:last-child{border-right:none;}
+.stat .v{font-family:var(--font-display); font-weight:600; font-size:2.6rem; color:var(--accent); line-height:1;}
+.stat .l{font-family:var(--font-mono); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-3); margin-top:10px;}
+
+/* ---------- Closing ---------- */
+.closing{align-items:flex-start;}
+.closing h2{font-size:clamp(2.6rem,6vw,4.6rem);}
+.closing .lead{margin-top:18px;}
+.closing .cover-authors{margin-top:34px;}
+
+/* ============================================================
+   Chrome : barre, progression, compteur, notes, timer
+   ============================================================ */
+.topbar{
+  position:fixed; top:0; left:0; right:0; height:54px; z-index:60;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 26px; pointer-events:none;
+}
+.topbar .brand{
+  font-family:var(--font-display); font-style:italic; font-weight:800; font-size:1.05rem;
+  letter-spacing:-.03em; color:var(--text-2); pointer-events:auto;
+}
+.topbar .brand::after{content:'_'; color:var(--accent);}
+.topbar .tools{display:flex; align-items:center; gap:16px; pointer-events:auto;}
+.timer{
+  font-family:var(--font-mono); font-size:.82rem; letter-spacing:.06em; color:var(--text-3);
+  background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:6px 14px;
+  cursor:pointer; user-select:none; transition:color .2s,border-color .2s;
+}
+.timer.run{color:var(--text); border-color:var(--border-strong);}
+.timer.warn{color:var(--accent-2); border-color:var(--accent-2);}
+.timer.over{color:#e7b3b3; border-color:var(--dropped);}
+.counter{font-family:var(--font-mono); font-size:.82rem; letter-spacing:.08em; color:var(--text-3);}
+.counter b{color:var(--accent);}
+
+.progress{position:fixed; bottom:0; left:0; height:3px; background:var(--accent); width:0; z-index:60; transition:width .35s ease;}
+
+.nav-arrows{position:fixed; bottom:22px; right:26px; display:flex; gap:8px; z-index:60;}
+.nav-arrows button{
+  width:42px; height:42px; border-radius:50%; border:1px solid var(--border);
+  background:var(--surface); color:var(--text); font-size:1.1rem; cursor:pointer;
+  display:grid; place-items:center; transition:all .15s;
+}
+.nav-arrows button:hover{border-color:var(--accent); color:var(--accent);}
+
+.hint{
+  position:fixed; bottom:24px; left:26px; z-index:60;
+  font-family:var(--font-mono); font-size:.72rem; color:var(--text-3); letter-spacing:.04em;
+}
+.hint kbd{
+  background:var(--surface); border:1px solid var(--border); border-bottom-width:2px;
+  border-radius:4px; padding:1px 6px; color:var(--text-2); font-family:var(--font-mono); font-size:.7rem;
+}
+
+/* ---------- Speaker notes ---------- */
+.notes{
+  position:fixed; left:0; right:0; bottom:0; z-index:70;
+  background:rgba(12,10,8,.97); border-top:2px solid var(--accent);
+  padding:22px 32px 26px; transform:translateY(110%); transition:transform .3s ease;
+  max-height:46vh; overflow:auto;
+}
+.notes.show{transform:none;}
+.notes .nh{font-family:var(--font-mono); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:12px; display:flex; justify-content:space-between;}
+.notes .nb{font-size:1rem; line-height:1.6; color:var(--text); max-width:90ch;}
+.notes .nb ul{margin:10px 0 0 18px;}
+.notes .nb li{margin-bottom:6px; color:var(--text-2);}
+.notes .nb strong{color:var(--text);}
+.notes .time{color:var(--accent-2);}
+
+/* ---------- Overview / grid ---------- */
+.overview .slide{
+  display:flex !important; position:relative; inset:auto; opacity:1;
+  transform:scale(1); padding:24px 30px; border:1px solid var(--border); border-radius:8px;
+  overflow:hidden; pointer-events:none; animation:none;
+}
+.overview{
+  position:fixed; inset:0; z-index:80; background:var(--bg); overflow:auto;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:14px; padding:64px 24px 24px;
+}
+.overview .ov-wrap{position:relative; aspect-ratio:16/9; border:1px solid var(--border); border-radius:10px; overflow:hidden; cursor:pointer; background:var(--surface);}
+.overview .ov-wrap:hover{border-color:var(--accent);}
+.overview .ov-wrap.cur{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent-soft);}
+.overview .ov-frame{transform-origin:top left; pointer-events:none;}
+.overview .ov-num{position:absolute; top:8px; left:10px; font-family:var(--font-mono); font-size:.7rem; color:var(--accent); z-index:2;}
+
+/* ---------- Help overlay ---------- */
+.help{
+  position:fixed; inset:0; z-index:90; background:rgba(12,10,8,.92); display:none;
+  place-items:center; padding:40px;
+}
+.help.show{display:grid;}
+.help .panel{background:var(--surface); border:1px solid var(--border-strong); border-radius:var(--r-lg); padding:34px 40px; max-width:520px;}
+.help h3{font-family:var(--font-display); font-size:1.6rem; margin-bottom:22px;}
+.help table{width:100%; border-collapse:collapse;}
+.help td{padding:9px 0; border-bottom:1px solid var(--border); color:var(--text-2); font-size:.95rem;}
+.help td:first-child{width:140px;}
+.help kbd{background:var(--surface-2); border:1px solid var(--border); border-bottom-width:2px; border-radius:4px; padding:2px 9px; font-family:var(--font-mono); font-size:.8rem; color:var(--text); margin-right:5px;}
+
+@media (max-width:760px){
+  .grid-3,.grid-2,.grid-4,.stack-grid{grid-template-columns:1fr;}
+  .erd,.flow{flex-direction:column;}
+  .rel{min-width:auto; flex-direction:row; padding:8px 0;}
+  .overview{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">GameStack</div>
+  <div class="tools">
+    <div class="timer" id="timer" title="Cliquer pour démarrer / mettre en pause · R pour remettre à zéro">15:00</div>
+    <div class="counter"><b id="cur">01</b> / <span id="total">16</span></div>
+  </div>
+</div>
+
+<main class="deck" id="deck">
+
+  <!-- ===== 1 · COVER ===== -->
+  <section class="slide cover active" data-notes="
+    <strong class='time'>⏱ ~0:30</strong>
+    <ul>
+      <li>Se présenter : <strong>Alexis Steiger &amp; Marc Bastian</strong>, projet de spécialité B2.</li>
+      <li>Annoncer le sujet en une phrase : <strong>GameStack, une bibliothèque de jeux vidéo centralisée et synchronisée avec Steam</strong>.</li>
+      <li>Donner le plan : problème → solution → technique → design → bilan. Présentation d'environ 15 min.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Projet de spécialité · B2 — MyDigitalSchool</div>
+      <div class="logo-big">GameStack</div>
+      <p class="lead">Votre collection de jeux vidéo, centralisée et synchronisée avec Steam.</p>
+      <div class="cover-meta">
+        <span class="chip solid">Symfony 8.1</span>
+        <span class="chip">PHP 8.4</span>
+        <span class="chip">Doctrine ORM</span>
+        <span class="chip">Steam Web API</span>
+      </div>
+      <div class="cover-authors"><strong>Alexis Steiger</strong> &amp; <strong>Marc Bastian</strong> · Juin 2026</div>
+    </div>
+  </section>
+
+  <!-- ===== 2 · LE CONSTAT ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~1:00</strong>
+    <ul>
+      <li>Poser le problème de façon concrète : un joueur a des jeux partout — Steam, console, achats physiques.</li>
+      <li>Insister sur l'absence de <strong>suivi</strong> : on oublie où on en est, si on a fini, notre avis.</li>
+      <li>Conclure : il manque un outil unique. C'est le besoin auquel GameStack répond.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Le constat</div>
+      <h2>Nos jeux sont <em>éparpillés</em></h2>
+      <ul class="bullets">
+        <li><strong>Des bibliothèques dispersées</strong> — Steam, PlayStation, Xbox, Switch, achats physiques…</li>
+        <li><strong>Aucun suivi</strong> — où en suis-je sur ce jeu ? Est-ce que je l'ai terminé ? abandonné ?</li>
+        <li><strong>Pas de mémoire</strong> — notes, temps de jeu, avis personnels : tout se perd.</li>
+      </ul>
+      <p class="punch">Il manque un endroit unique pour gérer sa passion.</p>
+    </div>
+  </section>
+
+  <!-- ===== 3 · LA SOLUTION ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~1:00</strong>
+    <ul>
+      <li>Énoncer le pitch : une appli web qui centralise la collection et se synchronise avec Steam.</li>
+      <li>Présenter les <strong>3 piliers</strong> — ce sont les promesses du produit, on y reviendra dans la démo technique.</li>
+      <li>Transition : « voyons d'abord ce que le cahier des charges demandait ».</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">La solution</div>
+      <h2>GameStack en une phrase</h2>
+      <p class="lead">Une application web qui <strong>centralise toute votre collection</strong> et l'<strong>importe automatiquement depuis Steam</strong> — avec un suivi personnel complet.</p>
+      <div class="grid grid-3">
+        <div class="card"><span class="ico">🔗</span><h3>Synchronisation Steam</h3><p>Import automatique de toute la bibliothèque Steam en un clic.</p></div>
+        <div class="card"><span class="ico">📚</span><h3>Gestion unifiée</h3><p>Jeux Steam et ajouts manuels dans une seule bibliothèque.</p></div>
+        <div class="card"><span class="ico">📊</span><h3>Suivi personnalisé</h3><p>Statut, note /10, temps de jeu et avis pour chaque jeu.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 4 · OBJECTIFS ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~1:00</strong>
+    <ul>
+      <li>Dérouler les objectifs du cahier des charges (O1 → O5) : tous réalisés.</li>
+      <li>Q6 (défis aléatoires) : fonctionnalité bonus, prévue mais non réalisée — l'assumer comme perspective.</li>
+      <li>Point clé : l'évolution <strong>« post-V0 » Steam a été menée à bien</strong> — au-delà du périmètre initial.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Cahier des charges</div>
+      <h2>Les objectifs</h2>
+      <ul class="checklist">
+        <li><span class="tag">O1</span><span class="body"><strong>Compte &amp; connexion sécurisée</strong> — inscription, login, sessions.</span><span class="done">✓ Réalisé</span></li>
+        <li><span class="tag">O2</span><span class="body"><strong>Ajouter des jeux</strong> à sa bibliothèque et leur attribuer un statut.</span><span class="done">✓ Réalisé</span></li>
+        <li><span class="tag">O3</span><span class="body"><strong>Stocker &amp; afficher</strong> les caractéristiques de chaque jeu.</span><span class="done">✓ Réalisé</span></li>
+        <li><span class="tag">O4</span><span class="body"><strong>Recherche, filtrage &amp; tri</strong> dans la bibliothèque.</span><span class="done">✓ Réalisé</span></li>
+        <li><span class="tag">O5</span><span class="body"><strong>Back office</strong> d'administration.</span><span class="done">✓ Réalisé</span></li>
+        <li><span class="tag">+</span><span class="body"><strong>Évolution Steam (post-V0)</strong> — intégration de la bibliothèque Steam.</span><span class="done">✓ Réalisé</span></li>
+        <li><span class="tag">Q6</span><span class="body">Défis aléatoires avec récompense sur une fiche de jeu.</span><span class="soon">○ Perspective</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== 5 · ACTEURS ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~0:45</strong>
+    <ul>
+      <li>Trois rôles gérés par le système de sécurité Symfony (ROLE_USER / ROLE_ADMIN).</li>
+      <li>Le périmètre d'accès est contrôlé côté serveur — on le reverra dans la slide Sécurité.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Acteurs &amp; rôles</div>
+      <h2>Trois profils d'utilisateurs</h2>
+      <div class="grid grid-3">
+        <div class="card"><span class="num">VISITEUR</span><h3>Non connecté</h3><p>Accède aux pages publiques, à l'inscription et à la connexion.</p></div>
+        <div class="card"><span class="num">MEMBRE · ROLE_USER</span><h3>Connecté</h3><p>Gère sa bibliothèque, ses fiches de jeux et ses données personnelles.</p></div>
+        <div class="card"><span class="num">ADMIN · ROLE_ADMIN</span><h3>Administrateur</h3><p>Accède au back office : tableau de bord, utilisateurs, statistiques.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 6 · STACK ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~1:00</strong>
+    <ul>
+      <li>Justifier les choix : <strong>Symfony</strong> pour un framework MVC robuste et sécurisé, <strong>Doctrine</strong> pour l'ORM.</li>
+      <li><strong>AssetMapper / importmap</strong> : pas de build Node lourd, on reste proche du natif (Stimulus, Turbo).</li>
+      <li><strong>SQLite</strong> : base légère parfaite pour le développement et la démo.</li>
+      <li>Point fort : intégration de deux <strong>services externes Steam</strong> (OpenID + Web API).</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Stack technique</div>
+      <h2>Les technologies</h2>
+      <div class="stack-grid">
+        <div class="stack-row"><h4>Backend</h4><div class="pillset"><span class="pill hot">Symfony 8.1</span><span class="pill">PHP 8.4</span><span class="pill">Doctrine ORM 3.6</span></div></div>
+        <div class="stack-row"><h4>Frontend</h4><div class="pillset"><span class="pill">Twig</span><span class="pill">AssetMapper · importmap</span><span class="pill">Stimulus / Turbo</span><span class="pill">Design system CSS</span></div></div>
+        <div class="stack-row"><h4>Données</h4><div class="pillset"><span class="pill">SQLite</span><span class="pill">Migrations Doctrine</span></div></div>
+        <div class="stack-row"><h4>Services externes</h4><div class="pillset"><span class="pill hot">Steam OpenID 2.0</span><span class="pill hot">Steam Web API</span></div></div>
+        <div class="stack-row"><h4>Sécurité</h4><div class="pillset"><span class="pill">Security Bundle</span><span class="pill">CSRF</span><span class="pill">Password Hasher</span></div></div>
+        <div class="stack-row"><h4>Outils</h4><div class="pillset"><span class="pill">Git / GitHub</span><span class="pill">Composer</span><span class="pill">PHPUnit</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 7 · MODÈLE DE DONNÉES ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~1:30</strong>
+    <ul>
+      <li>Présenter le modèle relationnel conçu en amont (schéma Miro).</li>
+      <li>Cœur de l'architecture : la table pivot <strong>Library_game</strong> relie un <strong>utilisateur</strong> et un <strong>jeu</strong> (clés <strong>user_id</strong> / <strong>game_id</strong>) tout en portant les données personnelles : note, avis, temps, dates, favori.</li>
+      <li><strong>game</strong> = le catalogue ; <strong>mode</strong> et <strong>status</strong> sont des tables de référence (solo/multi/coop, et À faire/En cours/Terminé…) reliées par <strong>mode_id</strong> et <strong>status_id</strong>.</li>
+      <li>Ce découpage normalisé permet à deux joueurs d'avoir le même jeu avec des suivis différents.</li>
+    </ul>">
+    <div class="slide-inner wide">
+      <div class="eyebrow">Architecture des données</div>
+      <h2>Le modèle <em>relationnel</em></h2>
+      <figure class="diagram-frame">
+        <img src="mcd.png" alt="Modèle de données GameStack — tables UTILISATEURS, game, mode, Library_game, status"
+             onerror="this.style.display='none';this.parentElement.querySelector('.diagram-missing').style.display='flex';this.parentElement.querySelector('.zoom-hint').style.display='none';">
+        <span class="zoom-hint">⤢ Cliquer pour agrandir</span>
+        <div class="diagram-missing" style="display:none">
+          <div>
+            <strong>Schéma du modèle de données à ajouter</strong>
+            <span>Enregistrez votre diagramme Miro sous : <code>présentation/mcd.png</code></span>
+          </div>
+        </div>
+      </figure>
+      <p class="diagram-cap">La table pivot <strong>Library_game</strong> relie un utilisateur (<strong>user_id</strong>) à un jeu (<strong>game_id</strong>) et porte ses données personnelles. Les tables <strong>mode</strong> et <strong>status</strong> servent de référentiels.</p>
+    </div>
+  </section>
+
+  <!-- ===== 8 · PARCOURS ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~1:00</strong>
+    <ul>
+      <li>Dérouler le parcours type d'un nouvel utilisateur de bout en bout.</li>
+      <li>Insister sur la fluidité : en liant Steam, la bibliothèque se remplit <strong>toute seule</strong>.</li>
+      <li>C'est le bon moment pour basculer sur une <strong>démo live</strong> si elle est prévue.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Parcours utilisateur</div>
+      <h2>De l'inscription au suivi</h2>
+      <div class="flow">
+        <div class="flow-step"><div class="n">1</div><h4>Inscription</h4><p>Email, pseudo, mot de passe validé.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="n">2</div><h4>Bibliothèque</h4><p>Vue grille, tri, recherche.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="n">3</div><h4>Suivi</h4><p>Statut, note, temps, avis.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="n">4</div><h4>Lier Steam</h4><p>Connexion via Steam OpenID.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="n">5</div><h4>Import auto</h4><p>La bibliothèque se remplit seule.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== INSCRIPTION & CONNEXION ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~0:50</strong>
+    <ul>
+      <li>Présenter les formulaires d'authentification du front office, construits avec les <strong>Symfony Forms</strong>.</li>
+      <li><strong>Inscription</strong> : pseudo, email, mot de passe — avec validation (format et unicité de l'email, robustesse du mot de passe).</li>
+      <li><strong>Connexion</strong> : email + mot de passe, gérée par le composant <strong>Security</strong> de Symfony.</li>
+      <li>Insister : le mot de passe est <strong>haché</strong>, jamais stocké en clair ; récupération par email possible.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Front office · Authentification</div>
+      <h2>Inscription &amp; <em>connexion</em></h2>
+      <p class="lead">Des formulaires construits avec les <strong>Symfony Forms</strong>, validés côté serveur et reliés au système de sécurité du framework.</p>
+      <div class="grid grid-3">
+        <div class="card"><span class="ico">📝</span><h3>Inscription</h3><p>Pseudo, email et mot de passe. Validation des champs : format et unicité de l'email, robustesse du mot de passe.</p></div>
+        <div class="card"><span class="ico">🔑</span><h3>Connexion</h3><p>Email + mot de passe, authentification prise en charge par le composant Security de Symfony et une session sécurisée.</p></div>
+        <div class="card"><span class="ico">🔒</span><h3>Sous le capot</h3><p>Mot de passe haché (jamais en clair) et récupération du mot de passe par email.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== AJOUTER UN JEU ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~1:00</strong>
+    <ul>
+      <li>Expliquer dans les grandes lignes comment l'ajout d'un jeu a été implémenté — il y a deux voies.</li>
+      <li><strong>Création manuelle</strong> : un formulaire <strong>GameType</strong> lié à l'entité <strong>Game</strong>. À la soumission : upload de la jaquette (fichier renommé puis déplacé dans <strong>/public/uploads</strong>), on persiste le Game et on crée le <strong>LibraryGame</strong> qui le relie à l'utilisateur, avant de rediriger vers la bibliothèque.</li>
+      <li><strong>Depuis le catalogue</strong> : une recherche par titre permet d'ajouter un jeu existant en un clic, avec un contrôle anti-doublon.</li>
+      <li>Le motif Symfony récurrent : créer le formulaire, <code>handleRequest</code>, vérifier <code>isSubmitted &amp;&amp; isValid</code>, puis persister et flush.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Front office · Bibliothèque</div>
+      <h2>Ajouter un <em>jeu</em></h2>
+      <p class="lead">Deux façons d'enrichir sa bibliothèque : la <strong>création manuelle</strong> via un formulaire, ou l'<strong>ajout depuis le catalogue</strong>.</p>
+      <div class="flow">
+        <div class="flow-step"><div class="n">1</div><h4>Formulaire</h4><p>Un <span class="mono" style="font-size:.7rem">GameType</span> relié à l'entité Game.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="n">2</div><h4>Jaquette</h4><p>Upload de l'image, renommée puis déplacée dans <span class="mono" style="font-size:.7rem">/public/uploads</span>.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="n">3</div><h4>Persistance</h4><p>Validation, puis enregistrement du Game + LibraryGame.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="n">4</div><h4>Bibliothèque</h4><p>Redirection : le jeu apparaît dans la collection.</p></div>
+      </div>
+      <div class="callout"><span class="ico">🔎</span><p><strong>Autre voie — depuis le catalogue</strong> : une recherche par titre permet d'ajouter un jeu déjà existant en un clic, avec un contrôle anti-doublon.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 9 · FONCTIONNALITÉ PHARE ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~2:00 — moment fort</strong>
+    <ul>
+      <li>C'est <strong>LA</strong> fonctionnalité différenciante : prendre son temps.</li>
+      <li>Étape 1 : authentification <strong>Steam OpenID 2.0</strong> → on récupère le SteamID de façon vérifiée.</li>
+      <li>Étape 2 : <strong>GetOwnedGames</strong> liste les jeux ; <strong>appdetails</strong> enrichit chaque jeu (jaquette, dev, éditeur, description FR).</li>
+      <li>Étape 3 : on crée / met à jour les entités Game + LibraryGame, avec détection automatique du mode (solo / multi / coop).</li>
+      <li>La resynchronisation est possible à la demande, sans doublons.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Fonctionnalité phare</div>
+      <h2>Synchronisation <em>Steam</em></h2>
+      <div class="flow">
+        <div class="flow-step"><div class="n">1</div><h4>OpenID 2.0</h4><p>L'utilisateur s'authentifie chez Steam, on récupère son SteamID vérifié.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="n">2</div><h4>Web API</h4><p><span class="mono" style="font-size:.7rem">GetOwnedGames</span> liste les jeux possédés.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="n">3</div><h4>Enrichissement</h4><p><span class="mono" style="font-size:.7rem">appdetails</span> récupère jaquette, dev, éditeur, description FR.</p></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="n">4</div><h4>Import</h4><p>Création des entités + mode détecté automatiquement.</p></div>
+      </div>
+      <div class="callout"><span class="ico">⚡</span><p><strong>Détection intelligente du mode</strong> — solo, multijoueur ou coopératif sont déduits automatiquement des catégories Steam. La <strong>resynchronisation</strong> est possible à tout moment, sans créer de doublons.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 10 · DÉFI TECHNIQUE ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~1:30</strong>
+    <ul>
+      <li>Raconter le bug comme une vraie anecdote de dev — ça montre la compréhension fine du framework.</li>
+      <li>Le protocole OpenID renvoie des paramètres nommés <strong>openid.mode</strong>, <strong>openid.claimed_id</strong>… avec des points.</li>
+      <li>Or PHP/Symfony convertit automatiquement les <strong>« . » en « _ »</strong> dans <code>$request->query->all()</code> → les clés attendues par Steam sont cassées, la validation échoue.</li>
+      <li>Solution : <strong>parser manuellement la query string brute</strong> pour préserver les noms exacts. Bug résolu.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Le défi technique</div>
+      <h2>Quand un <em>point</em> casse tout</h2>
+      <p class="lead">La validation OpenID de Steam échouait systématiquement. La cause : PHP convertit les <strong>«&nbsp;.&nbsp;»</strong> en <strong>«&nbsp;_&nbsp;»</strong> dans les noms de paramètres GET — ce qui casse les clés <span class="mono" style="font-size:.78rem">openid.*</span> attendues par Steam.</p>
+      <div class="code">
+        <div class="bar"><i style="background:#A88282"></i><i style="background:#FBC55E"></i><i style="background:#88B596"></i><span class="fn">SteamAuthService.php</span></div>
+        <pre><code><span class="cm">// On parse la query string brute pour préserver "openid.*"</span>
+<span class="kw">foreach</span> (explode(<span class="st">'&'</span>, $request-&gt;<span class="fnname">getQueryString</span>()) <span class="kw">as</span> $pair) {
+    $parts = explode(<span class="st">'='</span>, $pair, <span class="st">2</span>);
+    $key   = <span class="fnname">urldecode</span>($parts[<span class="st">0</span>]);
+    $value = <span class="fnname">urldecode</span>($parts[<span class="st">1</span>] ?? <span class="st">''</span>);
+    $params[$key] = $value;   <span class="cm">// openid.mode reste openid.mode ✓</span>
+}</code></pre>
+      </div>
+      <div class="callout"><span class="ico">🐛➜✅</span><p><strong>Leçon retenue</strong> — bien comprendre comment le framework manipule la requête HTTP avant de blâmer l'API distante.</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 12 · BACK OFFICE ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~0:45</strong>
+    <ul>
+      <li>Présenter le back office admin réservé à ROLE_ADMIN.</li>
+      <li>Tableau de bord avec indicateurs : inscrits, en ligne, admins actifs, derniers inscrits.</li>
+      <li>La notion d'« en ligne » repose sur un <strong>EventSubscriber</strong> qui met à jour la dernière activité (fenêtre de 15 min).</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Back office</div>
+      <h2>Tableau de bord administrateur</h2>
+      <p class="lead">Réservé au rôle <span class="mono" style="font-size:.78rem">ROLE_ADMIN</span>, il agrège en temps réel les indicateurs clés de la plateforme.</p>
+      <div class="stats">
+        <div class="stat"><div class="v">Utilisateurs</div><div class="l">inscrits</div></div>
+        <div class="stat"><div class="v">En ligne</div><div class="l">&lt; 15 min</div></div>
+        <div class="stat"><div class="v">Admins</div><div class="l">actifs</div></div>
+        <div class="stat"><div class="v">Activité</div><div class="l">derniers inscrits</div></div>
+      </div>
+      <p class="erd-note">Le statut « en ligne » est calculé par un <strong>EventSubscriber</strong> qui enregistre la dernière activité de chaque utilisateur à chaque requête.</p>
+    </div>
+  </section>
+
+  <!-- ===== 13 · DIRECTION ARTISTIQUE ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~1:00</strong>
+    <ul>
+      <li>Le design n'est pas accessoire : une vraie <strong>direction artistique</strong> a été définie — « éditorial arcade, dark warm, accent ambré ».</li>
+      <li>Tout repose sur un <strong>design system</strong> : des tokens CSS (couleurs, typo, espacements) réutilisés partout — cohérence garantie.</li>
+      <li>Mentionner que cette présentation elle-même reprend la charte du projet.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Direction artistique</div>
+      <h2>Éditorial arcade · <em>dark warm</em></h2>
+      <div class="swatches">
+        <div class="swatch"><div class="chip-color" style="background:#100E0B"></div><div class="meta"><b>Fond</b><span>#100E0B</span></div></div>
+        <div class="swatch"><div class="chip-color" style="background:#E8783C"></div><div class="meta"><b>Accent</b><span>#E8783C</span></div></div>
+        <div class="swatch"><div class="chip-color" style="background:#FBC55E"></div><div class="meta"><b>Accent 2</b><span>#FBC55E</span></div></div>
+        <div class="swatch"><div class="chip-color" style="background:#F2EBDC"></div><div class="meta"><b>Texte</b><span>#F2EBDC</span></div></div>
+        <div class="swatch"><div class="chip-color" style="background:linear-gradient(90deg,#B89BD9,#7B95C7,#88B596,#A88282)"></div><div class="meta"><b>Statuts</b><span>5 couleurs</span></div></div>
+      </div>
+      <div class="type-row">
+        <div class="type-card"><div class="sample" style="font-family:var(--font-display);font-style:italic">Fraunces</div><div class="label">Titres · serif éditorial</div></div>
+        <div class="type-card"><div class="sample" style="font-family:var(--font-body);font-weight:700">Manrope</div><div class="label">Texte · sans-serif</div></div>
+        <div class="type-card"><div class="sample mono" style="font-family:var(--font-mono);font-size:1.7rem">JetBrains</div><div class="label">Mono · labels &amp; data</div></div>
+      </div>
+      <p class="erd-note">Un <strong>design system</strong> complet (tokens CSS réutilisables) assure la cohérence visuelle de toute l'application — y compris cette présentation.</p>
+    </div>
+  </section>
+
+  <!-- ===== 14 · ORGANISATION ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~0:45</strong>
+    <ul>
+      <li>Projet mené à deux en deux semaines (2 → 16 juin).</li>
+      <li><strong>Git / GitHub</strong> avec branches de fonctionnalités et Pull Requests (feature/design, feature/Library, Steam Auth V1 puis V2).</li>
+      <li>Un <strong>journal de bord</strong> a documenté l'avancement jour par jour.</li>
+      <li>Répartition équilibrée du travail entre les deux développeurs.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Organisation &amp; méthode</div>
+      <h2>Deux semaines, deux développeurs</h2>
+      <div class="stats">
+        <div class="stat"><div class="v">101</div><div class="l">commits</div></div>
+        <div class="stat"><div class="v">2</div><div class="l">développeurs</div></div>
+        <div class="stat"><div class="v">14 j</div><div class="l">2 → 16 juin</div></div>
+        <div class="stat"><div class="v">Git</div><div class="l">branches &amp; PR</div></div>
+      </div>
+      <ul class="bullets" style="margin-top:30px">
+        <li><strong>Workflow Git/GitHub</strong> — branches de fonctionnalités et Pull Requests (<span class="mono" style="font-size:.74rem">feature/design</span>, <span class="mono" style="font-size:.74rem">feature/Library</span>, Steam Auth V1 → V2).</li>
+        <li><strong>Journal de bord</strong> — avancement documenté jour par jour, du cadrage au design.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== 15 · BILAN & PERSPECTIVES ===== -->
+  <section class="slide" data-notes="
+    <strong class='time'>⏱ ~1:00</strong>
+    <ul>
+      <li>Bilan honnête : tous les objectifs V0 atteints + l'évolution Steam, qui était la grosse prise de risque.</li>
+      <li>Difficultés : le protocole OpenID, les limites de l'API Steam (rate limit, langue), la conception du modèle pivot.</li>
+      <li>Perspectives concrètes : défis aléatoires (Q6), page profil + statistiques personnelles, filtres avancés par plateforme/genre.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Bilan &amp; perspectives</div>
+      <h2>Ce qui est fait, ce qui vient</h2>
+      <div class="grid grid-3">
+        <div class="card"><span class="num">✓ RÉALISÉ</span><h3>Objectifs atteints</h3><p>Tout le périmètre V0 + l'intégration Steam, au-delà du cahier des charges initial.</p></div>
+        <div class="card"><span class="num">⚙ DIFFICULTÉS</span><h3>Surmontées</h3><p>OpenID, limites de l'API Steam et conception du modèle pivot LibraryGame.</p></div>
+        <div class="card"><span class="num">→ À VENIR</span><h3>Perspectives</h3><p>Défis aléatoires (Q6), profil &amp; stats perso, filtres par plateforme et genre.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 16 · MERCI ===== -->
+  <section class="slide closing" data-notes="
+    <strong class='time'>⏱ ~0:15</strong>
+    <ul>
+      <li>Remercier le jury et ouvrir les questions.</li>
+      <li>Garder en tête les slides « démo », « défi technique » et « modèle de données » : ce sont les plus probables en questions.</li>
+    </ul>">
+    <div class="slide-inner">
+      <div class="eyebrow">Merci</div>
+      <h2>Des questions&nbsp;?</h2>
+      <p class="lead">Merci de votre attention. Nous sommes prêts à échanger sur l'architecture, la synchronisation Steam ou les choix de design.</p>
+      <div class="cover-meta">
+        <span class="chip solid">GameStack</span>
+        <span class="chip">Symfony 8.1</span>
+        <span class="chip">github.com/Akaashiii57/GameStack</span>
+      </div>
+      <div class="cover-authors"><strong>Alexis Steiger</strong> &amp; <strong>Marc Bastian</strong> · Projet de spécialité B2 · MyDigitalSchool</div>
+    </div>
+  </section>
+
+</main>
+
+<div class="progress" id="progress"></div>
+<div class="nav-arrows">
+  <button id="prev" aria-label="Précédent">‹</button>
+  <button id="next" aria-label="Suivant">›</button>
+</div>
+<div class="hint"><kbd>←</kbd> <kbd>→</kbd> naviguer · <kbd>N</kbd> notes · <kbd>O</kbd> vue d'ensemble · <kbd>F</kbd> plein écran · <kbd>?</kbd> aide</div>
+
+<!-- Speaker notes -->
+<div class="notes" id="notes">
+  <div class="nh"><span>Notes orateur</span><span id="notesPos"></span></div>
+  <div class="nb" id="notesBody"></div>
+</div>
+
+<!-- Overview grid -->
+<div class="overview" id="overview" style="display:none"></div>
+
+<!-- Lightbox image plein écran -->
+<div class="lightbox" id="lightbox" aria-hidden="true">
+  <button class="lightbox-close" id="lightboxClose" aria-label="Fermer (Échap)">✕</button>
+  <img id="lightboxImg" src="" alt="Modèle de données GameStack en plein écran">
+</div>
+
+<!-- Help -->
+<div class="help" id="help">
+  <div class="panel">
+    <h3>Raccourcis clavier</h3>
+    <table>
+      <tr><td><kbd>→</kbd><kbd>Espace</kbd></td><td>Slide suivante</td></tr>
+      <tr><td><kbd>←</kbd></td><td>Slide précédente</td></tr>
+      <tr><td><kbd>N</kbd></td><td>Afficher / masquer les notes orateur</td></tr>
+      <tr><td><kbd>O</kbd></td><td>Vue d'ensemble (grille)</td></tr>
+      <tr><td><kbd>F</kbd></td><td>Plein écran</td></tr>
+      <tr><td><kbd>T</kbd> <kbd>R</kbd></td><td>Démarrer / réinitialiser le minuteur</td></tr>
+      <tr><td><kbd>Début</kbd><kbd>Fin</kbd></td><td>Première / dernière slide</td></tr>
+      <tr><td><kbd>?</kbd></td><td>Afficher cette aide</td></tr>
+    </table>
+  </div>
+</div>
+
+<script>
+(function(){
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const N = slides.length;
+  let cur = 0;
+  const elCur = document.getElementById('cur');
+  const elTotal = document.getElementById('total');
+  const progress = document.getElementById('progress');
+  const notes = document.getElementById('notes');
+  const notesBody = document.getElementById('notesBody');
+  const notesPos = document.getElementById('notesPos');
+  const help = document.getElementById('help');
+  const overview = document.getElementById('overview');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  elTotal.textContent = String(N).padStart(2,'0');
+
+  function pad(n){return String(n).padStart(2,'0');}
+
+  function render(){
+    slides.forEach((s,i)=>s.classList.toggle('active', i===cur));
+    elCur.textContent = pad(cur+1);
+    progress.style.width = ((cur+1)/N*100)+'%';
+    if(notes.classList.contains('show')) updateNotes();
+    location.hash = '#'+(cur+1);
+    // sync overview highlight
+    overview.querySelectorAll('.ov-wrap').forEach((w,i)=>w.classList.toggle('cur', i===cur));
+  }
+  function go(i){ cur = Math.max(0, Math.min(N-1, i)); render(); }
+  function next(){ if(cur<N-1) go(cur+1); }
+  function prev(){ if(cur>0) go(cur-1); }
+
+  function updateNotes(){
+    notesBody.innerHTML = slides[cur].getAttribute('data-notes') || '<em style="color:var(--text-3)">Aucune note pour cette slide.</em>';
+    notesPos.textContent = pad(cur+1)+' / '+pad(N);
+  }
+  function toggleNotes(){
+    notes.classList.toggle('show');
+    if(notes.classList.contains('show')) updateNotes();
+  }
+
+  // ---- Timer (15:00 elapsed, change de couleur) ----
+  const elTimer = document.getElementById('timer');
+  let running=false, secs=0, tid=null;
+  const TARGET=15*60;
+  function fmt(s){const sign=s<0?'-':'';s=Math.abs(s);return sign+pad(Math.floor(s/60))+':'+pad(s%60);}
+  function tick(){
+    secs++;
+    elTimer.textContent = fmt(secs);
+    elTimer.classList.toggle('warn', secs>=13*60 && secs<TARGET);
+    elTimer.classList.toggle('over', secs>=TARGET);
+  }
+  function startTimer(){ if(running)return; running=true; elTimer.classList.add('run'); tid=setInterval(tick,1000); }
+  function pauseTimer(){ running=false; clearInterval(tid); }
+  function toggleTimer(){ running?pauseTimer():startTimer(); }
+  function resetTimer(){ pauseTimer(); secs=0; elTimer.textContent='15:00'; elTimer.classList.remove('run','warn','over'); }
+  elTimer.addEventListener('click', ()=>{ if(secs===0) elTimer.textContent='00:00'; toggleTimer(); });
+
+  // ---- Overview ----
+  let ovBuilt=false;
+  function buildOverview(){
+    if(ovBuilt) return; ovBuilt=true;
+    slides.forEach((s,i)=>{
+      const wrap=document.createElement('div'); wrap.className='ov-wrap';
+      const num=document.createElement('div'); num.className='ov-num'; num.textContent=pad(i+1);
+      const frame=document.createElement('div'); frame.className='ov-frame';
+      frame.innerHTML = '<div style="width:1280px;height:720px">'+s.querySelector('.slide-inner').innerHTML+'</div>';
+      wrap.appendChild(num); wrap.appendChild(frame);
+      wrap.addEventListener('click', ()=>{ closeOverview(); go(i); });
+      overview.appendChild(wrap);
+    });
+    // scale frames to fit
+    requestAnimationFrame(()=>{
+      overview.querySelectorAll('.ov-wrap').forEach(w=>{
+        const f=w.querySelector('.ov-frame');
+        const scale=w.clientWidth/1280;
+        f.style.transform='scale('+scale+')';
+      });
+    });
+  }
+  function openOverview(){ buildOverview(); overview.style.display='grid'; overview.querySelectorAll('.ov-wrap').forEach((w,i)=>w.classList.toggle('cur', i===cur)); }
+  function closeOverview(){ overview.style.display='none'; }
+  function toggleOverview(){ overview.style.display==='grid'?closeOverview():openOverview(); }
+
+  // ---- Fullscreen ----
+  function toggleFs(){
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+    else document.exitFullscreen?.();
+  }
+
+  // ---- Keyboard ----
+  document.addEventListener('keydown', e=>{
+    if(lightbox.classList.contains('show')){ if(e.key==='Escape') closeLightbox(); return; }
+    if(e.key==='?'){ help.classList.toggle('show'); return; }
+    if(help.classList.contains('show') && e.key==='Escape'){ help.classList.remove('show'); return; }
+    if(overview.style.display==='grid'){
+      if(e.key==='Escape'||e.key==='o'||e.key==='O'){ closeOverview(); }
+      if(e.key==='Enter'){ closeOverview(); }
+      return;
+    }
+    switch(e.key){
+      case 'ArrowRight': case ' ': case 'PageDown': e.preventDefault(); next(); startTimerOnce(); break;
+      case 'ArrowLeft': case 'PageUp': e.preventDefault(); prev(); break;
+      case 'Home': go(0); break;
+      case 'End': go(N-1); break;
+      case 'n': case 'N': toggleNotes(); break;
+      case 'o': case 'O': toggleOverview(); break;
+      case 'f': case 'F': toggleFs(); break;
+      case 't': case 'T': toggleTimer(); break;
+      case 'r': case 'R': resetTimer(); break;
+      case 'Escape': notes.classList.remove('show'); help.classList.remove('show'); break;
+    }
+  });
+
+  let timerAutoStarted=false;
+  function startTimerOnce(){ if(!timerAutoStarted){ timerAutoStarted=true; if(secs===0) elTimer.textContent='00:00'; startTimer(); } }
+
+  document.getElementById('next').addEventListener('click', ()=>{ next(); startTimerOnce(); });
+  document.getElementById('prev').addEventListener('click', prev);
+  help.addEventListener('click', ()=>help.classList.remove('show'));
+
+  // ---- Lightbox : agrandir l'image du modèle de données en plein écran ----
+  function openLightbox(src){ lightboxImg.src = src; lightbox.classList.add('show'); }
+  function closeLightbox(){ lightbox.classList.remove('show'); }
+  document.querySelectorAll('.diagram-frame img').forEach(function(img){
+    img.addEventListener('click', function(e){ e.stopPropagation(); openLightbox(img.src); });
+  });
+  lightbox.addEventListener('click', closeLightbox);
+  document.getElementById('lightboxClose').addEventListener('click', function(e){ e.stopPropagation(); closeLightbox(); });
+
+  // ---- Touch swipe ----
+  let tsx=0;
+  document.addEventListener('touchstart', e=>{ tsx=e.changedTouches[0].clientX; }, {passive:true});
+  document.addEventListener('touchend', e=>{
+    const dx=e.changedTouches[0].clientX-tsx;
+    if(Math.abs(dx)>50){ dx<0?next():prev(); startTimerOnce(); }
+  }, {passive:true});
+
+  // ---- Deep link via hash ----
+  const h=parseInt(location.hash.replace('#',''),10);
+  if(h>=1 && h<=N) cur=h-1;
+  render();
+})();
+</script>
+</body>
+</html>
