@@ -158,21 +158,11 @@ php bin/console lint:yaml config/
 - Profiler Symfony activé en développement
 - Commandes de debug disponibles
 
-## 📈 Roadmap
-
-- [ ] Intégration Epic Games Store
-- [ ] Statistiques avancées
-- [ ] Export de données
-- [ ] Mode hors ligne
-- [ ] Application mobile
 
 ## 🤝 Contribution
 
 Les contributions sont les bienvenues ! Voir le fichier `CONTRIBUTING.md` pour les guidelines.
 
-## 📄 Licence
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 
 ---
 
