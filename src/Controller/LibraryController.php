@@ -19,24 +19,16 @@ use App\Entity\GameUser;
 #[IsGranted('ROLE_USER')]
 final class LibraryController extends AbstractController
 {
-    #[Route('/jeux', name: 'app_jeux')]
-    public function redirectToLibrary(): Response
-    {
-        return $this->redirectToRoute('app_library', [], 301);
-    }
     
     #[Route('/library', name: 'app_library')]
     public function index(Request $request): Response
     {
         /** @var \App\Entity\GameUser $user */
         $user = $this->getUser();
-        
         // Récupérer le paramètre de tri
         $sort = $request->query->get('sort', 'az'); // Par défaut: A-Z
-        
         // Trier les jeux
         $libraries = $user->getLibraryGames()->toArray();
-        
         if ($sort === 'za') {
             // Tri Z-A
             usort($libraries, function($a, $b) {
