@@ -91,18 +91,6 @@ STEAM_API_KEY=votre_cle_api_steam
 DATABASE_URL="sqlite:///%kernel.project_dir%/var/data.db"
 ```
 
-### Commandes disponibles
-```bash
-# Synchroniser les jeux Steam d'un utilisateur
-php bin/console app:sync-steam-games <steamId>
-
-# Mettre à jour les détails des jeux Steam
-php bin/console app:update-steam-details
-
-# Migrer les statuts des jeux
-php bin/console app:migrate-steam-status
-```
-
 ## 🎯 Utilisation
 
 ### Première connexion
@@ -111,7 +99,7 @@ php bin/console app:migrate-steam-status
 3. Votre bibliothèque Steam est automatiquement importée
 
 ### Gestion des jeux
-- **Ajout manuel** : Via le formulaire de recherche
+- **Ajout manuel** : Via le formulaire
 - **Statuts** : Modifiable depuis la page de détail d'un jeu
 - **Notes** : Système d'évaluation de 1 à 10
 - **Temps de jeu** : Enregistrement manuel ou automatique
@@ -127,42 +115,6 @@ php bin/console app:migrate-steam-status
 - Validation OpenID Steam robuste
 - Protection CSRF sur tous les formulaires
 - Gestion sécurisée des sessions
-
-## 🎨 Design System
-
-### Couleurs
-- `--bg`: #100E0B (fond principal)
-- `--accent`: #E8783C (orange principal)
-- `--text`: #F2EBDC (texte principal)
-- `--surface`: #1A1714 (surfaces)
-
-### Polices
-- **Fraunces** : Titres et éléments d'affichage
-- **Manrope** : Texte normal et contenu
-- **JetBrains Mono** : Éléments techniques
-
-## 🐛 Développement
-
-### Tests
-```bash
-# Lancer les tests PHPUnit
-php bin/phpunit
-
-# Vérifier le code style
-php bin/console lint:twig templates/
-php bin/console lint:yaml config/
-```
-
-### Débogage
-- Logs disponibles dans `var/log/`
-- Profiler Symfony activé en développement
-- Commandes de debug disponibles
-
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! Voir le fichier `CONTRIBUTING.md` pour les guidelines.
-
 
 ---
 
